@@ -347,13 +347,19 @@ export default function Game() {
                     }
 
                     findBestMove() {
-                        // Check each possible swap for matches
+                        let bestScore = -Infinity;
+                        let bestMove = null;
+                        const depth = 3; // How many moves to look ahead
+
+                        // Check each possible move
                         for (let row = 0; row < this.gridSize; row++) {
                             for (let col = 0; col < this.gridSize; col++) {
                                 // Check right swap
                                 if (col < this.gridSize - 1) {
-                                    if (this.wouldCreateMatch(row, col, row, col + 1)) {
-                                        return {
+                                    const score = this.evaluateMove(row, col, row, col + 1, depth);
+                                    if (score > bestScore) {
+                                        bestScore = score;
+                                        bestMove = {
                                             orb1: this.grid[row][col],
                                             orb2: this.grid[row][col + 1]
                                         };
@@ -361,8 +367,10 @@ export default function Game() {
                                 }
                                 // Check down swap
                                 if (row < this.gridSize - 1) {
-                                    if (this.wouldCreateMatch(row, col, row + 1, col)) {
-                                        return {
+                                    const score = this.evaluateMove(row, col, row + 1, col, depth);
+                                    if (score > bestScore) {
+                                        bestScore = score;
+                                        bestMove = {
                                             orb1: this.grid[row][col],
                                             orb2: this.grid[row + 1][col]
                                         };
@@ -370,51 +378,132 @@ export default function Game() {
                                 }
                             }
                         }
-                        return null;
+                        return bestMove;
                     }
 
-                    wouldCreateMatch(row1, col1, row2, col2) {
-                        // Temporarily swap orbs
-                        const temp = this.grid[row1][col1];
-                        this.grid[row1][col1] = this.grid[row2][col2];
-                        this.grid[row2][col2] = temp;
+                    evaluateMove(row1, col1, row2, col2, depth) {
+                        if (depth === 0) return 0;
 
-                        let hasMatch = this.checkForMatches(row1, col1) || 
-                                       this.checkForMatches(row2, col2);
+                        // Create a deep copy of the grid for simulation
+                        const gridCopy = this.copyGrid();
+                        
+                        // Simulate the swap
+                        const temp = gridCopy[row1][col1];
+                        gridCopy[row1][col1] = gridCopy[row2][col2];
+                        gridCopy[row2][col2] = temp;
 
-                        // Swap back
-                        this.grid[row2][col2] = this.grid[row1][col1];
-                        this.grid[row1][col1] = temp;
+                        // Find matches after swap
+                        const matches = this.findMatchesInGrid(gridCopy);
+                        if (matches.size === 0) return -1; // Invalid move
 
-                        return hasMatch;
+                        let score = matches.size; // Base score is number of matched orbs
+
+                        // Simulate removing matches and dropping orbs
+                        const newGrid = this.simulateMatchRemovalAndDrop(gridCopy, matches);
+                        
+                        // Recursively evaluate possible next moves
+                        if (depth > 1) {
+                            let bestNextScore = -Infinity;
+                            
+                            // Check all possible next moves
+                            for (let r = 0; r < this.gridSize; r++) {
+                                for (let c = 0; c < this.gridSize; c++) {
+                                    if (c < this.gridSize - 1) {
+                                        const nextScore = this.evaluateMove(r, c, r, c + 1, depth - 1);
+                                        bestNextScore = Math.max(bestNextScore, nextScore);
+                                    }
+                                    if (r < this.gridSize - 1) {
+                                        const nextScore = this.evaluateMove(r, c, r + 1, c, depth - 1);
+                                        bestNextScore = Math.max(bestNextScore, nextScore);
+                                    }
+                                }
+                            }
+                            
+                            score += bestNextScore * 0.8; // Weight future moves less
+                        }
+
+                        return score;
                     }
 
-                    checkForMatches(row, col) {
-                        const type = this.grid[row][col].getData('type');
+                    copyGrid() {
+                        const newGrid = [];
+                        for (let row = 0; row < this.gridSize; row++) {
+                            newGrid[row] = [...this.grid[row]];
+                        }
+                        return newGrid;
+                    }
+
+                    findMatchesInGrid(grid) {
+                        const matches = new Set();
 
                         // Check horizontal matches
-                        if (col >= 2 && 
-                            this.grid[row][col-2]?.getData('type') === type && 
-                            this.grid[row][col-1]?.getData('type') === type) return true;
-                        if (col >= 1 && col < this.gridSize-1 && 
-                            this.grid[row][col-1]?.getData('type') === type && 
-                            this.grid[row][col+1]?.getData('type') === type) return true;
-                        if (col < this.gridSize-2 && 
-                            this.grid[row][col+1]?.getData('type') === type && 
-                            this.grid[row][col+2]?.getData('type') === type) return true;
+                        for (let row = 0; row < this.gridSize; row++) {
+                            for (let col = 0; col < this.gridSize - 2; col++) {
+                                if (!grid[row][col]) continue;
+                                const type = grid[row][col].getData('type');
+                                if (grid[row][col + 1]?.getData('type') === type &&
+                                    grid[row][col + 2]?.getData('type') === type) {
+                                    matches.add(grid[row][col]);
+                                    matches.add(grid[row][col + 1]);
+                                    matches.add(grid[row][col + 2]);
+                                }
+                            }
+                        }
 
                         // Check vertical matches
-                        if (row >= 2 && 
-                            this.grid[row-2][col]?.getData('type') === type && 
-                            this.grid[row-1][col]?.getData('type') === type) return true;
-                        if (row >= 1 && row < this.gridSize-1 && 
-                            this.grid[row-1][col]?.getData('type') === type && 
-                            this.grid[row+1][col]?.getData('type') === type) return true;
-                        if (row < this.gridSize-2 && 
-                            this.grid[row+1][col]?.getData('type') === type && 
-                            this.grid[row+2][col]?.getData('type') === type) return true;
+                        for (let row = 0; row < this.gridSize - 2; row++) {
+                            for (let col = 0; col < this.gridSize; col++) {
+                                if (!grid[row][col]) continue;
+                                const type = grid[row][col].getData('type');
+                                if (grid[row + 1][col]?.getData('type') === type &&
+                                    grid[row + 2][col]?.getData('type') === type) {
+                                    matches.add(grid[row][col]);
+                                    matches.add(grid[row + 1][col]);
+                                    matches.add(grid[row + 2][col]);
+                                }
+                            }
+                        }
 
-                        return false;
+                        return matches;
+                    }
+
+                    simulateMatchRemovalAndDrop(grid, matches) {
+                        const newGrid = this.copyGrid();
+                        
+                        // Remove matches
+                        matches.forEach(orb => {
+                            const row = orb.getData('row');
+                            const col = orb.getData('col');
+                            newGrid[row][col] = null;
+                        });
+
+                        // Simulate gravity
+                        for (let col = 0; col < this.gridSize; col++) {
+                            let writeRow = this.gridSize - 1;
+                            for (let row = this.gridSize - 1; row >= 0; row--) {
+                                if (newGrid[row][col]) {
+                                    if (writeRow !== row) {
+                                        newGrid[writeRow][col] = newGrid[row][col];
+                                        newGrid[row][col] = null;
+                                    }
+                                    writeRow--;
+                                }
+                            }
+                        }
+
+                        // Fill empty spaces with random orbs
+                        for (let row = 0; row < this.gridSize; row++) {
+                            for (let col = 0; col < this.gridSize; col++) {
+                                if (!newGrid[row][col]) {
+                                    const randomType = Phaser.Math.RND.pick(this.orbTypes);
+                                    newGrid[row][col] = {
+                                        getData: () => ({ type: randomType, row, col })
+                                    };
+                                }
+                            }
+                        }
+
+                        return newGrid;
                     }
                 }
 
