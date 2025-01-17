@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const Character = () => {
+  const router = useRouter();
   const [currentFrame, setCurrentFrame] = useState(0);
   const [facingLeft, setFacingLeft] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-  const [initialPosition] = useState({ x: 523, y: 255 });
+  const [initialPosition] = useState({ x: 523, y: 280 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   const SPRITE_WIDTH = 96;
@@ -84,6 +86,17 @@ const Character = () => {
 
         const newOffsetX = prev.x + (deltaX * MOVEMENT_SPEED);
         const newOffsetY = prev.y + (deltaY * MOVEMENT_SPEED);
+
+        // Calculate absolute position
+        const absoluteX = Math.round(initialPosition.x + newOffsetX);
+        const absoluteY = Math.round(initialPosition.y + newOffsetY);
+        
+        console.log(`Character Position - X: ${absoluteX}, Y: ${absoluteY}`);
+
+        // Check if character is at the specific position
+        if (absoluteX === 523 && absoluteY === 255) {
+          router.push('/community');
+        }
 
         return { x: newOffsetX, y: newOffsetY };
       });
