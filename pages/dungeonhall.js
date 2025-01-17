@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import styles from '../styles/DungeonGame.module.css';
 import { useRouter } from 'next/router';
 
+const actions = ['a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 
+                'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1'];
+
 export default function DungeonGame() {
   const router = useRouter();
   const [position, setPosition] = useState({ x: 538, y: 542 });
@@ -13,6 +16,13 @@ export default function DungeonGame() {
   const PORTAL_THRESHOLD = 20; // Detection range for portal
 
   useEffect(() => {
+    console.log("All dungeon actions:", actions);
+    
+    // Only handle dungeon moves here
+    const dungeonMoves = actions.filter(action => action.length === 2);
+    console.log("Dungeon movements:", dungeonMoves);
+    console.log("Number of dungeon moves:", dungeonMoves.length);
+
     // Check if character is near the portal
     if (Math.abs(position.x - PORTAL_X) <= PORTAL_THRESHOLD && !showNotification) {
       setShowNotification(true);

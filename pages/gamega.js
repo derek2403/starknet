@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
 
+// Only the first 5 movements for the game board
+const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
+
 export default function Game() {
     const router = useRouter();
     const [currentImage, setCurrentImage] = useState(1);
@@ -24,6 +27,13 @@ export default function Game() {
     };
 
     useEffect(() => {
+        console.log("All game board actions:", actions);
+        
+        // Only handle game board moves here
+        const gameBoardMoves = actions.filter(action => action.length > 2);
+        console.log("Game board movements:", gameBoardMoves);
+        console.log("Number of game board moves:", gameBoardMoves.length);
+
         if (typeof window !== 'undefined') {
             try {
                 const Phaser = require('phaser');

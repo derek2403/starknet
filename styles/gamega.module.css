@@ -12,7 +12,7 @@
 }
 
 .content-wrapper {
-    background-color: rgba(224, 224, 224, 0.7);  /* Light grey with 70% opacity */
+    background-color: rgba(31, 60, 40, 0.31);
     padding: 20px;
     border-radius: 25px;
     display: flex;
@@ -20,8 +20,8 @@
     align-items: center;
     position: relative;
     height: 1200px;
-    width: 1000px;
-    max-width: 1000px;
+    width: 1200px;
+    max-width: 1200px;
 }
 
 /* Top section container */
@@ -111,14 +111,10 @@
 .game-container::before {
     content: '';
     position: absolute;
-    top: -10px;            /* Reduced from -20px */
-    left: -10px;           /* Reduced from -20px */
-    right: -10px;          /* Reduced from -20px */
-    bottom: -10px;         /* Reduced from -20px */
-    background-image: url('/gamejew/gameframe.png');
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    background-position: center;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
     z-index: 2;
     pointer-events: none;
 }
