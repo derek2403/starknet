@@ -1,6 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import styles from '../styles/gamega.module.css';
+import { useRouter } from 'next/router';
 
 export default function Game() {
+    const router = useRouter();
+    const [currentImage, setCurrentImage] = useState(1);
+    const [humanPower, setHumanPower] = useState(0);
+    const [monsterHealth, setMonsterHealth] = useState(100);
+    const [monsterPower, setMonsterPower] = useState(0);
+    const [humanHealth, setHumanHealth] = useState(100);
+    const [swapCount, setSwapCount] = useState(2);
+    const [isAttacking, setIsAttacking] = useState(false);
+    const [isMonsterAttacking, setIsMonsterAttacking] = useState(false);
+    const [isMonsterDead, setIsMonsterDead] = useState(false);
+    const [showMonster, setShowMonster] = useState(true);
+    const [showVictory, setShowVictory] = useState(false);
+    const [showEmpty, setShowEmpty] = useState(false);
+
+    const handleFrameClick = () => {
+        if (currentImage < 4) {
+            setCurrentImage(currentImage + 1);
+        }
+    };
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -10,7 +32,9 @@ export default function Game() {
                     constructor() {
                         super({ key: 'MainScene' });
                         this.gridSize = 6;
-                        this.tileSize = 64;
+                        this.tileSize = 60;
+                        this.orbSize = 100;
+                        this.orbPadding = 30;
                         this.orbTypes = ['dark', 'fire', 'heart', 'light', 'water', 'wood'];
                         this.selectedOrb = null;
                         this.isProcessing = false;
@@ -20,6 +44,14 @@ export default function Game() {
                         this.orbTypes.forEach(type => {
                             this.load.image(type, `/gameJew/${type}.png`);
                         });
+                        this.load.spritesheet('hit', '/monster/empty.gif', {
+                            frameWidth: 32,
+                            frameHeight: 32
+                        });
+                        this.load.spritesheet('power', '/monster/power.gif', {
+                            frameWidth: 32,
+                            frameHeight: 32
+                        });
                     }
 
                     create() {
@@ -28,18 +60,19 @@ export default function Game() {
                         const gridWidth = this.gridSize * this.tileSize;
                         const gridHeight = this.gridSize * this.tileSize;
                         
-                        this.startX = (gameWidth - gridWidth) / 2;
-                        this.startY = (gameHeight - gridHeight) / 2;
+                        this.startX = (gameWidth - gridWidth) / 2 - 80; /*up = left, down = right*/
+                        this.startY = (gameHeight - gridHeight) / 2-70;
 
                         this.grid = [];
                         for (let row = 0; row < this.gridSize; row++) {
                             this.grid[row] = [];
                             for (let col = 0; col < this.gridSize; col++) {
                                 const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                const x = this.startX + col * this.tileSize + this.tileSize/2;
-                                const y = this.startY + row * this.tileSize + this.tileSize/2;
+                                const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize/2;
+                                const y = this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize/2;
                                 
-                                const orb = this.add.image(x, y, randomType)
+                                const orb = this.add.sprite(x, y, randomType)
+                                    .setScale(2.5)
                                     .setInteractive()
                                     .setData({ row, col, type: randomType });
                                 
@@ -47,6 +80,20 @@ export default function Game() {
                                 this.grid[row][col] = orb;
                             }
                         }
+
+                        this.anims.create({
+                            key: 'hit-effect',
+                            frames: this.anims.generateFrameNumbers('hit', { start: 0, end: 5 }),
+                            frameRate: 12,
+                            repeat: 0
+                        });
+
+                        this.anims.create({
+                            key: 'power-effect',
+                            frames: this.anims.generateFrameNumbers('power', { start: 0, end: 5 }),
+                            frameRate: 12,
+                            repeat: 0
+                        });
                     }
 
                     selectOrb(orb) {
@@ -107,6 +154,56 @@ export default function Game() {
                             y: orb1.y,
                             duration: 100
                         });
+
+                        // Decrease swap count
+                        setSwapCount(prevCount => {
+                            const newCount = prevCount - 1;
+                            
+                            if (newCount === 0) {
+                                // Wait for processing to complete before attacking
+                                const checkProcessing = setInterval(() => {
+                                    if (!this.isProcessing) {
+                                        clearInterval(checkProcessing);
+                                        
+                                        setIsAttacking(true);
+                                        
+                                        const powerEffect = this.add.sprite(
+                                            this.cameras.main.width * 0.75,
+                                            this.cameras.main.height * 0.2,
+                                            'power'
+                                        ).setScale(2);
+                                        
+                                        powerEffect.play('power-effect');
+
+                                        setTimeout(() => {
+                                            setMonsterHealth(prevHealth => {
+                                                const newHealth = Math.max(0, prevHealth - 50);
+                                                
+                                                if (newHealth === 0) {
+                                                    // Start death sequence
+                                                    setIsMonsterDead(true);
+                                                    
+                                                    // Wait for diemonster.gif to play then redirect
+                                                    setTimeout(() => {
+                                                        router.push('/dungeonhall');
+                                                    }, 2000);
+                                                } else {
+                                                    monsterCounterAttack(this);
+                                                }
+                                                
+                                                return newHealth;
+                                            });
+                                            
+                                            setHumanPower(0);
+                                            setSwapCount(2);
+                                            setIsAttacking(false);
+                                            powerEffect.destroy();
+                                        }, 1000);
+                                    }
+                                }, 100);
+                            }
+                            return newCount;
+                        });
                     }
 
                     async startProcessing() {
@@ -136,10 +233,11 @@ export default function Game() {
                                 if (!this.grid[0][col]) {
                                     hasEmptySpaces = true;
                                     const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                    const x = this.startX + col * this.tileSize + this.tileSize/2;
+                                    const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize/2;
                                     const y = this.startY + this.tileSize/2;
                                     
-                                    const orb = this.add.image(x, y - this.tileSize, randomType)
+                                    const orb = this.add.sprite(x, y - this.tileSize, randomType)
+                                        .setScale(2.5)
                                         .setInteractive()
                                         .setData({ row: 0, col, type: randomType });
                                     
@@ -189,7 +287,7 @@ export default function Game() {
                                         await new Promise(resolve => {
                                             this.tweens.add({
                                                 targets: orb,
-                                                y: this.startY + row * this.tileSize + this.tileSize/2,
+                                                y: this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize/2,
                                                 duration: 150,
                                                 ease: 'Bounce.easeOut',
                                                 onComplete: resolve
@@ -201,7 +299,7 @@ export default function Game() {
                         }
                     }
 
-                    findAndRemoveMatches() {
+                    async findAndRemoveMatches() {
                         return new Promise(resolve => {
                             const matches = new Set();
 
@@ -238,12 +336,30 @@ export default function Game() {
                             }
 
                             if (matches.size > 0) {
+                                // Calculate power gain (2% per orb)
+                                const powerGain = matches.size * 2;
+                                setHumanPower(prevPower => Math.min(100, prevPower + powerGain));
+
                                 let matchesProcessed = 0;
                                 matches.forEach(orb => {
                                     const row = orb.getData('row');
                                     const col = orb.getData('col');
                                     this.grid[row][col] = null;
                                     
+                                    const hitEffect = this.add.sprite(orb.x, orb.y, 'hit')
+                                        .setScale(2);
+                                    
+                                    hitEffect.play('hit-effect');
+
+                                    this.tweens.add({
+                                        targets: hitEffect,
+                                        alpha: { from: 1, to: 0 },
+                                        duration: 300,
+                                        onComplete: () => {
+                                            hitEffect.destroy();
+                                        }
+                                    });
+
                                     this.tweens.add({
                                         targets: orb,
                                         alpha: 0,
@@ -267,7 +383,7 @@ export default function Game() {
 
                 const config = {
                     type: Phaser.AUTO,
-                    width: 800,
+                    width: 700,
                     height: 600,
                     scene: MainScene,
                     backgroundColor: '#2d2d2d',
@@ -285,23 +401,125 @@ export default function Game() {
         }
     }, []);
 
+    // Monster counter-attack sequence
+    const monsterCounterAttack = (scene) => {
+        // First power increase
+        setMonsterPower(5);
+
+        // Wait 2 seconds then increase to 15%
+        setTimeout(() => {
+            setMonsterPower(15);
+
+            // Create power effect on human
+            const humanPowerEffect = scene.add.sprite(
+                scene.cameras.main.width * 0.25,  // Left side for human
+                scene.cameras.main.height * 0.3,  // Adjust height as needed
+                'power'
+            ).setScale(2);
+            
+            humanPowerEffect.play('power-effect');
+            setIsMonsterAttacking(true);
+
+            // After power effect, reduce human health
+            setTimeout(() => {
+                setHumanHealth(prevHealth => Math.max(0, prevHealth - 20));
+                setMonsterPower(0);  // Reset monster power
+                setIsMonsterAttacking(false);
+                humanPowerEffect.destroy();
+            }, 1000);
+        }, 2000);
+    };
+
+    // Handle click after monster is dead
+    const handleClick = () => {
+        if (!showMonster) {
+            router.push('/dungeonhall');
+        }
+    };
+
     return (
-        <div style={{
-            width: '100vw',
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#000'
-        }}>
-            <div 
-                id="game-container"
-                style={{
-                    width: '800px',
-                    height: '600px',
-                    border: '2px solid red'
-                }}
-            />
+        <div 
+            className={styles['game-container-wrapper']}
+            onClick={handleClick}  // Add click handler to whole container
+        >
+            <div className={styles['content-wrapper']}>
+                <div className={styles['top-section']}>
+                    <div className={styles['health-bar-monster-label']}>
+                       Eldrakor
+                    </div>
+                    <div className={styles['health-bar-monster']}>
+                        <div 
+                            className={styles['health-bar-monster-fill']} 
+                            style={{ width: `${monsterHealth}%` }}
+                        />
+                    </div>
+                    <div className={styles['power-bar-monster']}>
+                        <div 
+                            className={styles['power-bar-monster-fill']}
+                            style={{ width: `${monsterPower}%` }}
+                        />
+                    </div>
+                    
+                    <div className={styles['monster-animation']}>
+                        <img 
+                            src={
+                                isMonsterDead 
+                                    ? "/monster/diemonster.gif" 
+                                    : isAttacking 
+                                        ? "/monster/power.gif" 
+                                        : "/monster/startattack.gif"
+                            }
+                            alt="Monster Animation"
+                        />
+                    </div>
+                </div>
+                
+                <div className={styles['middle-section']}>
+                    <div className={styles['health-bar-human-label']}>
+                        You
+                    </div>
+                    <div className={styles['health-bar-human']}>
+                        <div 
+                            className={styles['health-bar-human-fill']}
+                            style={{ 
+                                width: `${humanHealth}%`,
+                                transition: 'width 0.5s ease-in-out'
+                            }}
+                        />
+                    </div>
+                    <div className={styles['power-bar-human']}>
+                        <div 
+                            className={styles['power-bar-human-fill']} 
+                            style={{ width: `${humanPower}%` }}
+                        />
+                    </div>
+                    <div className={styles['swap-counter']}>
+                        Swaps: {swapCount}/2
+                    </div>
+                    
+                    <div className={styles['human-image']}>
+                        <img 
+                            src={isMonsterAttacking ? "/monster/power.gif" : "/human.png"}
+                            alt="Human"
+                        />
+                    </div>
+                    <div 
+                        className={styles['light-frame']}
+                        onClick={handleFrameClick}
+                    >
+                        <img 
+                            src={
+                                showVictory
+                                    ? "/eldrakor/youwin.png"
+                                    : `/eldrakor/${currentImage}.png`
+                            }
+                            alt="Dialog frame"
+                        />
+                    </div>
+                </div>
+
+                <div id="game-container" className={styles['game-container']} />
+            </div>
         </div>
     );
 }
