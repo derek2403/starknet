@@ -1,549 +1,184 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { connect } from '@braavos-wallet/connect';
 
 export default function Game() {
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
+    const [wallet, setWallet] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('');
+    
+    // ... existing wallet connection code ...
+
+    // Add UI overlay component
+    const GameOverlay = ({ score, highScore, loading, saveStatus }) => (
+        <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            fontFamily: 'Arial, sans-serif'
+        }}>
+            <div>
+                <div>Score: {score}</div>
+                <div>High Score: {highScore}</div>
+            </div>
+            {loading && (
+                <div style={{
+                    padding: '10px',
+                    background: '#333',
+                    borderRadius: '5px'
+                }}>
+                    Loading...
+                </div>
+            )}
+            {saveStatus && (
+                <div style={{
+                    padding: '10px',
+                    background: saveStatus.includes('Error') ? '#ff4444' : '#44ff44',
+                    borderRadius: '5px',
+                    opacity: 1,
+                    transition: 'opacity 0.5s',
+                }}>
+                    {saveStatus}
+                </div>
+            )}
+        </div>
+    );
+
+    // Update the MainScene class
+    class MainScene extends Phaser.Scene {
+        // ... existing scene code ...
+
+        async saveGameState() {
+            if (!wallet) return;
+
             try {
-                const Phaser = require('phaser');
+                setSaveStatus('Saving...');
+                setLoading(true);
 
-                class MainScene extends Phaser.Scene {
-                    constructor() {
-                        super({ key: 'MainScene' });
-                        this.gridSize = 6;
-                        this.tileSize = 64;
-                        this.orbTypes = ['dark', 'fire', 'heart', 'light', 'water', 'wood'];
-                        this.selectedOrb = null;
-                        this.isProcessing = false;
-                        this.autoPlayEnabled = false;
-                    }
-
-                    preload() {
-                        this.orbTypes.forEach(type => {
-                            this.load.image(type, `/gameJew/${type}.png`);
-                        });
-                    }
-
-                    create() {
-                        const gameWidth = this.cameras.main.width;
-                        const gameHeight = this.cameras.main.height;
-                        const gridWidth = this.gridSize * this.tileSize;
-                        const gridHeight = this.gridSize * this.tileSize;
-                        
-                        this.startX = (gameWidth - gridWidth) / 2;
-                        this.startY = (gameHeight - gridHeight) / 2;
-
-                        this.grid = [];
-                        for (let row = 0; row < this.gridSize; row++) {
-                            this.grid[row] = [];
-                            for (let col = 0; col < this.gridSize; col++) {
-                                const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                const x = this.startX + col * this.tileSize + this.tileSize/2;
-                                const y = this.startY + row * this.tileSize + this.tileSize/2;
-                                
-                                const orb = this.add.image(x, y, randomType)
-                                    .setInteractive()
-                                    .setData({ row, col, type: randomType });
-                                
-                                orb.on('pointerdown', () => this.selectOrb(orb));
-                                this.grid[row][col] = orb;
-                            }
-                        }
-
-                        // Replace the old autoplay button with this styled version
-                        const buttonWidth = 140;
-                        const buttonHeight = 40;
-                        const padding = 10;
-
-                        // Create button background
-                        const buttonBackground = this.add.rectangle(padding + buttonWidth/2, padding + buttonHeight/2, 
-                            buttonWidth, buttonHeight, 0x4a4a4a)
-                            .setInteractive()
-                            .setAlpha(0.9);
-
-                        // Add a border
-                        const buttonBorder = this.add.rectangle(padding + buttonWidth/2, padding + buttonHeight/2, 
-                            buttonWidth, buttonHeight)
-                            .setStrokeStyle(2, 0x00ff00);
-
-                        // Improved text styling
-                        const autoPlayButton = this.add.text(padding + buttonWidth/2, padding + buttonHeight/2, 'AutoPlay: OFF', {
-                            fontSize: '20px',
-                            fontFamily: 'Arial',
-                            color: '#ffffff',
-                            align: 'center'
-                        }).setOrigin(0.5);
-
-                        // Group the elements for easier interaction
-                        const buttonGroup = this.add.container(0, 0, [buttonBackground, buttonBorder, autoPlayButton]);
-
-                        // Hover effects
-                        buttonBackground.on('pointerover', () => {
-                            buttonBackground.setFillStyle(0x666666);
-                            this.input.setDefaultCursor('pointer');
-                        });
-
-                        buttonBackground.on('pointerout', () => {
-                            buttonBackground.setFillStyle(0x4a4a4a);
-                            this.input.setDefaultCursor('default');
-                        });
-
-                        buttonBackground.on('pointerdown', () => {
-                            buttonBackground.setFillStyle(0x333333);
-                        });
-
-                        buttonBackground.on('pointerup', () => {
-                            buttonBackground.setFillStyle(0x666666);
-                            this.autoPlayEnabled = !this.autoPlayEnabled;
-                            autoPlayButton.setText(`AutoPlay: ${this.autoPlayEnabled ? 'ON' : 'OFF'}`);
-                            if (this.autoPlayEnabled) {
-                                buttonBorder.setStrokeStyle(2, 0xff0000);  // Red border when active
-                                this.performAIMove();
-                            } else {
-                                buttonBorder.setStrokeStyle(2, 0x00ff00);  // Green border when inactive
-                            }
-                        });
-                    }
-
-                    selectOrb(orb) {
-                        if (this.isProcessing) return;
-                        
-                        if (!this.selectedOrb) {
-                            this.selectedOrb = orb;
-                            orb.setTint(0x888888);
-                        } else {
-                            const row1 = this.selectedOrb.getData('row');
-                            const col1 = this.selectedOrb.getData('col');
-                            const row2 = orb.getData('row');
-                            const col2 = orb.getData('col');
-
-                            if (this.isAdjacent(row1, col1, row2, col2)) {
-                                this.swapOrbs(this.selectedOrb, orb);
-                            }
-
-                            this.selectedOrb.clearTint();
-                            this.selectedOrb = null;
-                        }
-                    }
-
-                    isAdjacent(row1, col1, row2, col2) {
-                        return Math.abs(row1 - row2) + Math.abs(col1 - col2) === 1;
-                    }
-
-                    swapOrbs(orb1, orb2) {
-                        this.isProcessing = true;
-
-                        const row1 = orb1.getData('row');
-                        const col1 = orb1.getData('col');
-                        const row2 = orb2.getData('row');
-                        const col2 = orb2.getData('col');
-
-                        // Swap in grid array
-                        this.grid[row1][col1] = orb2;
-                        this.grid[row2][col2] = orb1;
-
-                        // Update orb data
-                        orb1.setData({ row: row2, col: col2 });
-                        orb2.setData({ row: row1, col: col1 });
-
-                        // Animate swap
-                        this.tweens.add({
-                            targets: orb1,
-                            x: orb2.x,
-                            y: orb2.y,
-                            duration: 100,
-                            onComplete: () => {
-                                this.startProcessing();
-                            }
-                        });
-
-                        this.tweens.add({
-                            targets: orb2,
-                            x: orb1.x,
-                            y: orb1.y,
-                            duration: 100
-                        });
-                    }
-
-                    async startProcessing() {
-                        this.isProcessing = true;
-                        
-                        let hasMatches;
-                        do {
-                            hasMatches = await this.findAndRemoveMatches();
-                            if (hasMatches) {
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                                await this.fillGridWithNewOrbs();
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                            }
-                        } while (hasMatches);
-
-                        this.isProcessing = false;
-                        
-                        if (this.autoPlayEnabled) {
-                            this.performAIMove();
-                        }
-                    }
-
-                    async fillGridWithNewOrbs() {
-                        let hasEmptySpaces;
-                        do {
-                            hasEmptySpaces = false;
-                            
-                            await this.dropOrbs();
-                            
-                            for (let col = 0; col < this.gridSize; col++) {
-                                if (!this.grid[0][col]) {
-                                    hasEmptySpaces = true;
-                                    const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                    const x = this.startX + col * this.tileSize + this.tileSize/2;
-                                    const y = this.startY + this.tileSize/2;
-                                    
-                                    const orb = this.add.image(x, y - this.tileSize, randomType)
-                                        .setInteractive()
-                                        .setData({ row: 0, col, type: randomType });
-                                    
-                                    orb.on('pointerdown', () => this.selectOrb(orb));
-                                    this.grid[0][col] = orb;
-
-                                    await new Promise(resolve => {
-                                        this.tweens.add({
-                                            targets: orb,
-                                            y: y,
-                                            duration: 150,
-                                            ease: 'Bounce.easeOut',
-                                            onComplete: resolve
-                                        });
-                                    });
-                                }
-                            }
-
-                            // Check for empty spaces
-                            for (let row = 0; row < this.gridSize; row++) {
-                                for (let col = 0; col < this.gridSize; col++) {
-                                    if (!this.grid[row][col]) {
-                                        hasEmptySpaces = true;
-                                        break;
-                                    }
-                                }
-                                if (hasEmptySpaces) break;
-                            }
-                        } while (hasEmptySpaces);
-                    }
-
-                    async dropOrbs() {
-                        for (let col = 0; col < this.gridSize; col++) {
-                            for (let row = this.gridSize - 1; row > 0; row--) {
-                                if (!this.grid[row][col]) {
-                                    let sourceRow = row - 1;
-                                    while (sourceRow >= 0 && !this.grid[sourceRow][col]) {
-                                        sourceRow--;
-                                    }
-
-                                    if (sourceRow >= 0) {
-                                        const orb = this.grid[sourceRow][col];
-                                        this.grid[row][col] = orb;
-                                        this.grid[sourceRow][col] = null;
-                                        orb.setData('row', row);
-
-                                        await new Promise(resolve => {
-                                            this.tweens.add({
-                                                targets: orb,
-                                                y: this.startY + row * this.tileSize + this.tileSize/2,
-                                                duration: 150,
-                                                ease: 'Bounce.easeOut',
-                                                onComplete: resolve
-                                            });
-                                        });
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    findAndRemoveMatches() {
-                        return new Promise(resolve => {
-                            const matches = new Set();
-
-                            // Check horizontal matches
-                            for (let row = 0; row < this.gridSize; row++) {
-                                for (let col = 0; col < this.gridSize - 2; col++) {
-                                    if (!this.grid[row][col]) continue;
-                                    const type = this.grid[row][col].getData('type');
-                                    if (this.grid[row][col + 1] && 
-                                        this.grid[row][col + 2] &&
-                                        type === this.grid[row][col + 1].getData('type') &&
-                                        type === this.grid[row][col + 2].getData('type')) {
-                                        matches.add(this.grid[row][col]);
-                                        matches.add(this.grid[row][col + 1]);
-                                        matches.add(this.grid[row][col + 2]);
-                                    }
-                                }
-                            }
-
-                            // Check vertical matches
-                            for (let row = 0; row < this.gridSize - 2; row++) {
-                                for (let col = 0; col < this.gridSize; col++) {
-                                    if (!this.grid[row][col]) continue;
-                                    const type = this.grid[row][col].getData('type');
-                                    if (this.grid[row + 1][col] && 
-                                        this.grid[row + 2][col] &&
-                                        type === this.grid[row + 1][col].getData('type') &&
-                                        type === this.grid[row + 2][col].getData('type')) {
-                                        matches.add(this.grid[row][col]);
-                                        matches.add(this.grid[row + 1][col]);
-                                        matches.add(this.grid[row + 2][col]);
-                                    }
-                                }
-                            }
-
-                            if (matches.size > 0) {
-                                let matchesProcessed = 0;
-                                matches.forEach(orb => {
-                                    const row = orb.getData('row');
-                                    const col = orb.getData('col');
-                                    this.grid[row][col] = null;
-                                    
-                                    this.tweens.add({
-                                        targets: orb,
-                                        alpha: 0,
-                                        scale: 0,
-                                        duration: 150,
-                                        onComplete: () => {
-                                            orb.destroy();
-                                            matchesProcessed++;
-                                            if (matchesProcessed === matches.size) {
-                                                resolve(true);
-                                            }
-                                        }
-                                    });
-                                });
-                            } else {
-                                resolve(false);
-                            }
-                        });
-                    }
-
-                    async performAIMove() {
-                        if (!this.autoPlayEnabled || this.isProcessing) return;
-
-                        const bestMove = this.findBestMove();
-                        if (bestMove) {
-                            const { orb1, orb2 } = bestMove;
-                            await this.makeAIMove(orb1, orb2);
-                        }
-
-                        // Schedule next move
-                        setTimeout(() => {
-                            if (this.autoPlayEnabled) {
-                                this.performAIMove();
-                            }
-                        }, 500);
-                    }
-
-                    async makeAIMove(orb1, orb2) {
-                        this.selectOrb(orb1);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        this.selectOrb(orb2);
-                    }
-
-                    findBestMove() {
-                        let bestScore = -Infinity;
-                        let bestMove = null;
-                        const depth = 3; // How many moves to look ahead
-
-                        // Check each possible move
-                        for (let row = 0; row < this.gridSize; row++) {
-                            for (let col = 0; col < this.gridSize; col++) {
-                                // Check right swap
-                                if (col < this.gridSize - 1) {
-                                    const score = this.evaluateMove(row, col, row, col + 1, depth);
-                                    if (score > bestScore) {
-                                        bestScore = score;
-                                        bestMove = {
-                                            orb1: this.grid[row][col],
-                                            orb2: this.grid[row][col + 1]
-                                        };
-                                    }
-                                }
-                                // Check down swap
-                                if (row < this.gridSize - 1) {
-                                    const score = this.evaluateMove(row, col, row + 1, col, depth);
-                                    if (score > bestScore) {
-                                        bestScore = score;
-                                        bestMove = {
-                                            orb1: this.grid[row][col],
-                                            orb2: this.grid[row + 1][col]
-                                        };
-                                    }
-                                }
-                            }
-                        }
-                        return bestMove;
-                    }
-
-                    evaluateMove(row1, col1, row2, col2, depth) {
-                        if (depth === 0) return 0;
-
-                        // Create a deep copy of the grid for simulation
-                        const gridCopy = this.copyGrid();
-                        
-                        // Simulate the swap
-                        const temp = gridCopy[row1][col1];
-                        gridCopy[row1][col1] = gridCopy[row2][col2];
-                        gridCopy[row2][col2] = temp;
-
-                        // Find matches after swap
-                        const matches = this.findMatchesInGrid(gridCopy);
-                        if (matches.size === 0) return -1; // Invalid move
-
-                        let score = matches.size; // Base score is number of matched orbs
-
-                        // Simulate removing matches and dropping orbs
-                        const newGrid = this.simulateMatchRemovalAndDrop(gridCopy, matches);
-                        
-                        // Recursively evaluate possible next moves
-                        if (depth > 1) {
-                            let bestNextScore = -Infinity;
-                            
-                            // Check all possible next moves
-                            for (let r = 0; r < this.gridSize; r++) {
-                                for (let c = 0; c < this.gridSize; c++) {
-                                    if (c < this.gridSize - 1) {
-                                        const nextScore = this.evaluateMove(r, c, r, c + 1, depth - 1);
-                                        bestNextScore = Math.max(bestNextScore, nextScore);
-                                    }
-                                    if (r < this.gridSize - 1) {
-                                        const nextScore = this.evaluateMove(r, c, r + 1, c, depth - 1);
-                                        bestNextScore = Math.max(bestNextScore, nextScore);
-                                    }
-                                }
-                            }
-                            
-                            score += bestNextScore * 0.8; // Weight future moves less
-                        }
-
-                        return score;
-                    }
-
-                    copyGrid() {
-                        const newGrid = [];
-                        for (let row = 0; row < this.gridSize; row++) {
-                            newGrid[row] = [...this.grid[row]];
-                        }
-                        return newGrid;
-                    }
-
-                    findMatchesInGrid(grid) {
-                        const matches = new Set();
-
-                        // Check horizontal matches
-                        for (let row = 0; row < this.gridSize; row++) {
-                            for (let col = 0; col < this.gridSize - 2; col++) {
-                                if (!grid[row][col]) continue;
-                                const type = grid[row][col].getData('type');
-                                if (grid[row][col + 1]?.getData('type') === type &&
-                                    grid[row][col + 2]?.getData('type') === type) {
-                                    matches.add(grid[row][col]);
-                                    matches.add(grid[row][col + 1]);
-                                    matches.add(grid[row][col + 2]);
-                                }
-                            }
-                        }
-
-                        // Check vertical matches
-                        for (let row = 0; row < this.gridSize - 2; row++) {
-                            for (let col = 0; col < this.gridSize; col++) {
-                                if (!grid[row][col]) continue;
-                                const type = grid[row][col].getData('type');
-                                if (grid[row + 1][col]?.getData('type') === type &&
-                                    grid[row + 2][col]?.getData('type') === type) {
-                                    matches.add(grid[row][col]);
-                                    matches.add(grid[row + 1][col]);
-                                    matches.add(grid[row + 2][col]);
-                                }
-                            }
-                        }
-
-                        return matches;
-                    }
-
-                    simulateMatchRemovalAndDrop(grid, matches) {
-                        const newGrid = this.copyGrid();
-                        
-                        // Remove matches
-                        matches.forEach(orb => {
-                            const row = orb.getData('row');
-                            const col = orb.getData('col');
-                            newGrid[row][col] = null;
-                        });
-
-                        // Simulate gravity
-                        for (let col = 0; col < this.gridSize; col++) {
-                            let writeRow = this.gridSize - 1;
-                            for (let row = this.gridSize - 1; row >= 0; row--) {
-                                if (newGrid[row][col]) {
-                                    if (writeRow !== row) {
-                                        newGrid[writeRow][col] = newGrid[row][col];
-                                        newGrid[row][col] = null;
-                                    }
-                                    writeRow--;
-                                }
-                            }
-                        }
-
-                        // Fill empty spaces with random orbs
-                        for (let row = 0; row < this.gridSize; row++) {
-                            for (let col = 0; col < this.gridSize; col++) {
-                                if (!newGrid[row][col]) {
-                                    const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                    newGrid[row][col] = {
-                                        getData: () => ({ type: randomType, row, col })
-                                    };
-                                }
-                            }
-                        }
-
-                        return newGrid;
-                    }
-                }
-
-                const config = {
-                    type: Phaser.AUTO,
-                    width: 800,
-                    height: 600,
-                    scene: MainScene,
-                    backgroundColor: '#2d2d2d',
-                    parent: 'game-container',
+                const gameState = {
+                    score: this.score,
+                    moveCount: this.moveCount,
+                    highScore: Math.max(this.score, this.highScore),
+                    timestamp: Date.now(),
+                    grid: this.grid.map(row => 
+                        row.map(orb => orb ? orb.getData('type') : null)
+                    )
                 };
 
-                const game = new Phaser.Game(config);
-
-                return () => {
-                    game.destroy(true);
+                // Convert the 2D grid to match the contract's Array2D structure
+                const flatGrid = gameState.grid.flat();
+                const contractGameState = {
+                    score: gameState.score,
+                    move_count: gameState.moveCount,
+                    high_score: gameState.highScore,
+                    timestamp: gameState.timestamp,
+                    grid: {
+                        rows: gameState.grid.length,
+                        cols: gameState.grid[0].length,
+                        data: flatGrid
+                    }
                 };
+
+                const tx = await wallet.execute({
+                    contractAddress: process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS,
+                    entrypoint: 'save_game_state',
+                    calldata: [contractGameState]  // Use the modified structure
+                });
+
+                setSaveStatus('Game Saved!');
+                setTimeout(() => setSaveStatus(''), 2000);
             } catch (error) {
-                console.error('Error in game initialization:', error);
+                setSaveStatus('Error: Failed to save');
+                console.error('Failed to save game state:', error);
+            } finally {
+                setLoading(false);
             }
         }
-    }, []);
+
+        async loadGameState() {
+            if (!wallet) return;
+
+            try {
+                setLoading(true);
+                setSaveStatus('Loading...');
+
+                const savedState = await wallet.call({
+                    contractAddress: process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS,
+                    entrypoint: 'get_game_state'
+                });
+
+                if (savedState) {
+                    // Convert the flat grid back to 2D
+                    const grid2D = [];
+                    for (let i = 0; i < savedState.grid.rows; i++) {
+                        const row = [];
+                        for (let j = 0; j < savedState.grid.cols; j++) {
+                            row.push(savedState.grid.data[i * savedState.grid.cols + j]);
+                        }
+                        grid2D.push(row);
+                    }
+                    savedState.grid = grid2D;
+                    
+                    // ... rest of loading logic ...
+                    setSaveStatus('Game Loaded!');
+                    setTimeout(() => setSaveStatus(''), 2000);
+                }
+            } catch (error) {
+                setSaveStatus('Error: Failed to load');
+                console.error('Failed to load game state:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+    }
 
     return (
         <div style={{
             width: '100vw',
             height: '100vh',
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: '#000'
+            backgroundColor: '#000',
+            position: 'relative'
         }}>
+            <button 
+                onClick={connectWallet}
+                style={{
+                    marginBottom: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: '#4a4a4a',
+                    color: 'white',
+                    border: '2px solid #00ff00',
+                    borderRadius: '5px',
+                    cursor: 'pointer'
+                }}
+            >
+                {wallet ? 'Connected' : 'Connect Wallet'}
+            </button>
             <div 
                 id="game-container"
                 style={{
                     width: '800px',
                     height: '600px',
-                    border: '2px solid red'
+                    border: '2px solid red',
+                    position: 'relative'
                 }}
-            />
+            >
+                <GameOverlay 
+                    score={game?.scene?.scenes[0]?.score || 0}
+                    highScore={game?.scene?.scenes[0]?.highScore || 0}
+                    loading={loading}
+                    saveStatus={saveStatus}
+                />
+            </div>
         </div>
     );
 }
