@@ -1,0 +1,42 @@
+[package]
+cairo-version = "2.8.4"
+name = "my_game"
+version = "0.1.0"
+
+[lib]
+allowed-warnings = 99999
+
+[cairo]
+sierra-replace-ids = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+build-external-contracts = ["dojo::world::world_contract::world"]
+
+[dependencies]
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0" }
+starknet = "2.8.4"
+
+[tool.dojo]
+initializer = "src/lib.cairo"
+
+[tool.dojo.env]
+rpc_url = "http://localhost:5050"
+
+# World
+world_address = "0x0"
+
+# Account
+account_address = "0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973"
+private_key = "0x1800000000300000180000000000030000000000003006001800006600"
+
+# Contracts
+contracts_dir = "contracts"
+
+# World
+world = "examples/my_game"
+
+[scripts]
+build = "sozo build"
+test = "sozo test" 
