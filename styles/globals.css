@@ -30,7 +30,7 @@ body {
 }
 
 .map-zoom-animation {
-  transform: scale(2);
+  transform: scale(1.7);
   transition: transform 0.3s ease-out;
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Boat from './Boat';
 
 const Map = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -24,14 +25,15 @@ const Map = () => {
           bg-[url('/background/map.png')] 
           bg-center bg-no-repeat bg-contain
           map-zoom-animation
-          ${isLoaded ? '' : 'scale-[2]'}
+          
         `}
         style={{
           transformOrigin: 'center center',
         }}
-        // onWheel={handleWheel}
+        onWheel={handleWheel}
       >
         {/* Map content can be added here */}
+        <Boat />
       </div>
     </div>
   );
