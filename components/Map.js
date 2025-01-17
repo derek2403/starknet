@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Boat from './Boat';
+import Character from './Character';
 
 const Map = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -34,6 +35,7 @@ const Map = () => {
       >
         {/* Map content can be added here */}
         <Boat />
+        <Character />
       </div>
     </div>
   );
