@@ -2,17 +2,16 @@
 mod GameState {
     use starknet::ContractAddress;
     use starknet::get_caller_address;
-    use array::ArrayTrait;
     use starknet::storage::Map;
-    use starknet::StorageAccess;
-    use starknet::storage_access::StorageAccess;
-    
+    use serde::{Serde, Deserialize, Serialize};
+    use array::ArrayTrait;
+
     #[storage]
     struct Storage {
         game_states: Map<(ContractAddress, felt252), GameStateStruct>,
     }
 
-    #[derive(Drop, Serde, Copy, StorageAccess)]
+    #[derive(Copy, Drop, Serde)]
     struct GameStateStruct {
         score: u32,
         move_count: u32,
@@ -21,11 +20,11 @@ mod GameState {
         grid: Array2D,
     }
 
-    #[derive(Drop, Serde, Copy, StorageAccess)]
+    #[derive(Copy, Drop, Serde)]
     struct Array2D {
         rows: u32,
         cols: u32,
-        data: Span<felt252>
+        data: Array<felt252>,
     }
 
     #[external(v0)]
@@ -39,4 +38,4 @@ mod GameState {
         let caller = get_caller_address();
         self.game_states.read((caller, 'latest'.into()))
     }
-} 
+}
