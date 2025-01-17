@@ -9,11 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.1.4",
+    "next": "^15.1.4",
     "phaser": "^3.87.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+<<<<<<< HEAD
     "starknet": "^6.11.0"
+=======
+    "tmx-parser": "^1.5.0"
+>>>>>>> upstream/zhiwei
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
