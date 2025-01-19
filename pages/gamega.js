@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
+import NPC from '../pages/components/NPC.js';
 
 // Only the first 5 movements for the game board
 const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
@@ -19,6 +20,7 @@ export default function Game() {
     const [showMonster, setShowMonster] = useState(true);
     const [showVictory, setShowVictory] = useState(false);
     const [showEmpty, setShowEmpty] = useState(false);
+    const [npcAction, setNpcAction] = useState('idle');
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -411,6 +413,18 @@ export default function Game() {
         }
     }, []);
 
+    useEffect(() => {
+        if (swapCount === 0) {
+            // When swaps are used up, trigger attack animation
+            setNpcAction('attack');
+            
+            // After attack animation, return to idle
+            setTimeout(() => {
+                setNpcAction('idle');
+            }, 1000);  // Adjust timing based on your attack animation duration
+        }
+    }, [swapCount]);
+
     // Monster counter-attack sequence
     const monsterCounterAttack = (scene) => {
         // First power increase
@@ -453,21 +467,32 @@ export default function Game() {
             onClick={handleClick}  // Add click handler to whole container
         >
             <div className={styles['content-wrapper']}>
+                <div className={styles['game-title']}>
+                    Defeat Eldrakor!
+                </div>
+                
                 <div className={styles['top-section']}>
-                    <div className={styles['health-bar-monster-label']}>
-                       Eldrakor
-                    </div>
-                    <div className={styles['health-bar-monster']}>
-                        <div 
-                            className={styles['health-bar-monster-fill']} 
-                            style={{ width: `${monsterHealth}%` }}
-                        />
-                    </div>
-                    <div className={styles['power-bar-monster']}>
-                        <div 
-                            className={styles['power-bar-monster-fill']}
-                            style={{ width: `${monsterPower}%` }}
-                        />
+                    <div className={styles['monster-stats-box']}>
+                        <div className={styles['health-bar-monster-label']}>
+                            <img 
+                                src="/monster/helmet.png" 
+                                alt="Helmet" 
+                                className={styles['helmet-icon']}
+                            />
+                            Eldrakor
+                        </div>
+                        <div className={styles['health-bar-monster']}>
+                            <div 
+                                className={styles['health-bar-monster-fill']} 
+                                style={{ width: `${monsterHealth}%` }}
+                            />
+                        </div>
+                        <div className={styles['power-bar-monster']}>
+                            <div 
+                                className={styles['power-bar-monster-fill']}
+                                style={{ width: `${monsterPower}%` }}
+                            />
+                        </div>
                     </div>
                     
                     <div className={styles['monster-animation']}>
@@ -485,33 +510,47 @@ export default function Game() {
                 </div>
                 
                 <div className={styles['middle-section']}>
-                    <div className={styles['health-bar-human-label']}>
-                        You
+                    <div className={styles['human-stats-box']}>
+                        <div className={styles['health-bar-human-label']}>
+                            <img 
+                                src="/monster/leaf.png" 
+                                alt="Human" 
+                                className={styles['human-icon']}
+                            />
+                            <span style={{ position: 'relative', right: '-8px', top: '-40px' }}>You</span>
+                        </div>
+                        <div className={styles['health-bar-human']}>
+                            <div 
+                                className={styles['health-bar-human-fill']}
+                                style={{ 
+                                    width: `${humanHealth}%`,
+                                    transition: 'width 0.5s ease-in-out'
+                                }}
+                            />
+                        </div>
+                        <div className={styles['power-bar-human']}>
+                            <div 
+                                className={styles['power-bar-human-fill']} 
+                                style={{ width: `${humanPower}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className={styles['health-bar-human']}>
-                        <div 
-                            className={styles['health-bar-human-fill']}
-                            style={{ 
-                                width: `${humanHealth}%`,
-                                transition: 'width 0.5s ease-in-out'
-                            }}
-                        />
-                    </div>
-                    <div className={styles['power-bar-human']}>
-                        <div 
-                            className={styles['power-bar-human-fill']} 
-                            style={{ width: `${humanPower}%` }}
-                        />
-                    </div>
-                    <div className={styles['swap-counter']}>
+                    <div className={styles['swap-counter']} style={{ position: 'relative', top: '-20px' }}>
                         Swaps: {swapCount}/2
                     </div>
                     
                     <div className={styles['human-image']}>
-                        <img 
-                            src={isMonsterAttacking ? "/monster/power.gif" : "/human.png"}
-                            alt="Human"
-                        />
+                        {isMonsterAttacking ? (
+                            <img src="/monster/power.gif" alt="Human" />
+                        ) : (
+                            <NPC 
+                                moveRange={{ x: { min: 0, max: 0 }, y: { min: 0, max: 0 }}}
+                                initialPosition={{ x: 0, y: 0 }}
+                                hairStyle="spikeyhair"
+                                actionType={npcAction}
+                                scale={5.5}
+                            />
+                        )}
                     </div>
                     <div 
                         className={styles['light-frame']}
