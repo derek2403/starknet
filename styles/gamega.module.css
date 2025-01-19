@@ -230,4 +230,37 @@
     font-weight: bold;
     text-shadow: 2px 2px 2px #000;
     z-index: 999;
+}
+
+.wallet-section {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.wallet-button {
+    background-color: #4a4a4a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.wallet-button:hover {
+    background-color: #666666;
+}
+
+.wallet-address {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
 } 

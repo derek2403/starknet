@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
+import { connect, disconnect } from 'get-starknet';
 
 // Only the first 5 movements for the game board
 const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
@@ -19,6 +20,8 @@ export default function Game() {
     const [showMonster, setShowMonster] = useState(true);
     const [showVictory, setShowVictory] = useState(false);
     const [showEmpty, setShowEmpty] = useState(false);
+    const [walletConnected, setWalletConnected] = useState(false);
+    const [walletAddress, setWalletAddress] = useState('');
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -635,6 +638,33 @@ export default function Game() {
         }
     };
 
+    // Add wallet connection handler
+    const connectWallet = async () => {
+        try {
+            const starknet = await connect();
+            if (starknet) {
+                setWalletConnected(true);
+                const address = starknet.selectedAddress;
+                setWalletAddress(address);
+                console.log("Wallet connected:", address);
+            }
+        } catch (error) {
+            console.error("Error connecting wallet:", error);
+        }
+    };
+
+    // Add disconnect handler
+    const disconnectWallet = async () => {
+        try {
+            await disconnect();
+            setWalletConnected(false);
+            setWalletAddress('');
+            console.log("Wallet disconnected");
+        } catch (error) {
+            console.error("Error disconnecting wallet:", error);
+        }
+    };
+
     return (
         <div 
             className={styles['game-container-wrapper']}
@@ -717,6 +747,30 @@ export default function Game() {
                 </div>
 
                 <div id="game-container" className={styles['game-container']} />
+
+                {/* Add wallet connection button */}
+                <div className={styles['wallet-section']}>
+                    {!walletConnected ? (
+                        <button 
+                            onClick={connectWallet}
+                            className={styles['wallet-button']}
+                        >
+                            Connect Braavos Wallet
+                        </button>
+                    ) : (
+                        <div>
+                            <div className={styles['wallet-address']}>
+                                Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                            </div>
+                            <button 
+                                onClick={disconnectWallet}
+                                className={styles['wallet-button']}
+                            >
+                                Disconnect Wallet
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
