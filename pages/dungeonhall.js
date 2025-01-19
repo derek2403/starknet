@@ -5,14 +5,37 @@ import Character from '../components/Character.js';
 export default function DungeonGame() {
   const router = useRouter();
   const [showNotification, setShowNotification] = useState(false);
+  const [characterPosition, setCharacterPosition] = useState({ x: 500, y: 400 });
 
-  // Portal check effect
+  // Handle key press
   useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === '1') {
+        setShowNotification(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, []);
+
+  // Separate effect for handling notification and redirect
+  useEffect(() => {
+    let redirectTimer;
     if (showNotification) {
-      setTimeout(() => {
+      redirectTimer = setTimeout(() => {
         router.push('/mapTest');
-      }, 3000);
+      }, 2000);
     }
+
+    return () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    };
   }, [showNotification, router]);
 
   return (
@@ -83,7 +106,8 @@ export default function DungeonGame() {
           actionType="run"
           scale={2}
           initialFacing="right"
-          MOVEMENT_SPEED={10}  // Updated to use correct prop name and value
+          MOVEMENT_SPEED={10}
+          onPositionChange={setCharacterPosition}
         />
       </div>
 
