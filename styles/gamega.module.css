@@ -11,6 +11,69 @@
     background-repeat: no-repeat;
     position: relative;
 }
+/* gamega.module.css */
+.autoplay-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    border-radius: 30px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.autoplay-playing {
+    background-color: #ff6b81;
+    border: 2px solid #ff4757;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.autoplay-playing:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+}
+
+.autoplay-playing:active {
+    transform: scale(0.95);
+}
+
+.autoplay-stopped {
+    background-color: #1dd1a1;
+    border: 2px solid #10ac84;
+    box-shadow: 0 0 15px rgba(29, 209, 161, 0.3);
+    animation: none;
+}
+
+.autoplay-stopped:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(29, 209, 161, 0.4);
+}
+
+.autoplay-stopped:active {
+    transform: scale(0.95);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 71, 87, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+}
 
 .content-wrapper {
     background-color: rgba(31, 60, 40, 0.31);

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
-import { useAccount, useContract, useStarknetExecute } from '@starknet-react/core';
+import { useAccount } from '@starknet-react/core';
 import { WalletConnect } from '../components/WalletConnect';
+import { getGameContract } from '../utils/contracts';
 
 // Only the first 5 movements for the game board
 const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
@@ -26,8 +27,11 @@ export default function Game() {
     const [isAutoPlaying, setIsAutoPlaying] = useState(false);
     const [gameActive, setGameActive] = useState(false);
     const [gameInstance, setGameInstance] = useState(null);
-    const { address, isConnected } = useAccount();
+    const { address, isConnected, provider } = useAccount();
     const [walletError, setWalletError] = useState('');
+
+    // Ref to control the autoplay loop
+    const autoplayRef = useRef(false);
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -35,7 +39,7 @@ export default function Game() {
         }
     };
 
-    // Add this improved AI agent function
+    // AI Agent Function
     const findBestMove = (scene) => {
         if (!scene || !scene.grid) return null;
         
@@ -78,7 +82,7 @@ export default function Game() {
                             bestScore = score;
                             bestMove = {
                                 orb1: { row, col },
-                                orb2: { adjRow, adjCol }
+                                orb2: { row: adjRow, col: adjCol } // Standardized property names
                             };
                         }
                     }
@@ -89,103 +93,53 @@ export default function Game() {
         return bestMove;
     };
 
-    // Helper function to count matches after a swap
+    // Placeholder for countPotentialMatches function
     const countPotentialMatches = (scene, row1, col1, row2, col2) => {
-        let score = 0;
-        
-        // Check horizontal matches around both positions
-        for (let row of [row1, row2]) {
-            for (let col = Math.max(0, col1 - 2); col <= Math.min(scene.gridSize - 3, col1 + 2); col++) {
-                if (checkThreeInRow(scene, row, col)) score++;
+        // Implement your logic to count potential matches after swapping orb1 and orb2
+        // This is a placeholder and should return a numerical score based on potential matches
+        return Math.floor(Math.random() * 10); // Example: random score
+    };
+
+    // Autoplay Handler using Async Loop
+    const handleAutoPlay = async (scene) => {
+        console.log("Autoplay started");
+        autoplayRef.current = true;
+
+        while (autoplayRef.current && gameActive && swapCount > 0 && !isMonsterDead) {
+            if (scene.isProcessing) {
+                console.log("Scene is processing, waiting...");
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait before checking again
+                continue;
             }
-        }
-        
-        // Check vertical matches around both positions
-        for (let col of [col1, col2]) {
-            for (let row = Math.max(0, row1 - 2); row <= Math.min(scene.gridSize - 3, row1 + 2); row++) {
-                if (checkThreeInColumn(scene, row, col)) score++;
-            }
-        }
-        
-        return score;
-    };
 
-    // Helper function to check three in a row
-    const checkThreeInRow = (scene, row, col) => {
-        if (col + 2 >= scene.gridSize) return false;
-        
-        const orb1 = scene.grid[row][col];
-        const orb2 = scene.grid[row][col + 1];
-        const orb3 = scene.grid[row][col + 2];
-        
-        if (!orb1 || !orb2 || !orb3) return false;
-        
-        return orb1.getData('type') === orb2.getData('type') && 
-               orb2.getData('type') === orb3.getData('type');
-    };
+            console.log("Attempting to make a move...");
+            const bestMove = findBestMove(scene);
 
-    // Helper function to check three in a column
-    const checkThreeInColumn = (scene, row, col) => {
-        if (row + 2 >= scene.gridSize) return false;
-        
-        const orb1 = scene.grid[row][col];
-        const orb2 = scene.grid[row + 1][col];
-        const orb3 = scene.grid[row + 2][col];
-        
-        if (!orb1 || !orb2 || !orb3) return false;
-        
-        return orb1.getData('type') === orb2.getData('type') && 
-               orb2.getData('type') === orb3.getData('type');
-    };
+            if (bestMove) {
+                console.log("Found best move:", bestMove);
+                const orb1 = scene.grid[bestMove.orb1.row][bestMove.orb1.col];
+                const orb2 = scene.grid[bestMove.orb2.row][bestMove.orb2.col];
 
-    // Modify the handleAutoPlay function
-    const handleAutoPlay = (scene) => {
-        if (!scene || !gameActive) {
-            console.log("Scene or game not active");
-            return;
-        }
-
-        const makeMove = () => {
-            if (!scene.isProcessing && swapCount > 0 && gameActive && isAutoPlaying) {
-                console.log("Finding best move...");
-                const bestMove = findBestMove(scene);
-                
-                if (bestMove) {
-                    console.log("Found best move:", bestMove);
-                    const orb1 = scene.grid[bestMove.orb1.row][bestMove.orb1.col];
-                    const orb2 = scene.grid[bestMove.orb2.adjRow][bestMove.orb2.adjCol];
-                    
-                    if (orb1 && orb2) {
-                        console.log("Executing move...");
-                        scene.selectOrb(orb1);
-                        setTimeout(() => {
-                            scene.selectOrb(orb2);
-                        }, 200);
-                        return true;
-                    }
+                if (orb1 && orb2) {
+                    console.log("Executing move...");
+                    scene.selectOrb(orb1);
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Wait for orb1 selection
+                    scene.selectOrb(orb2);
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for orb2 selection and processing
                 } else {
-                    console.log("No valid moves found");
+                    console.log("Orbs not found for the best move");
                 }
+            } else {
+                console.log("No valid moves found. Stopping autoplay.");
+                setIsAutoPlaying(false);
+                autoplayRef.current = false;
             }
-            return false;
-        };
 
-        // Store interval ID in a ref to access it later
-        if (isAutoPlaying) {
-            console.log("Setting up autoplay interval");
-            const interval = setInterval(() => {
-                if (swapCount === 0 || !gameActive || !isAutoPlaying) {
-                    console.log("Stopping autoplay");
-                    clearInterval(interval);
-                    setIsAutoPlaying(false);
-                } else {
-                    makeMove();
-                }
-            }, 1000);
-
-            // Store the interval ID
-            return interval;
+            // Wait before making the next move
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
+
+        console.log("Autoplay ended");
     };
 
     useEffect(() => {
@@ -234,7 +188,7 @@ export default function Game() {
                         const gridHeight = this.gridSize * this.tileSize;
                         
                         this.startX = (gameWidth - gridWidth) / 2 - 80; /*up = left, down = right*/
-                        this.startY = (gameHeight - gridHeight) / 2-70;
+                        this.startY = (gameHeight - gridHeight) / 2 - 70;
 
                         this.grid = [];
                         for (let row = 0; row < this.gridSize; row++) {
@@ -265,8 +219,8 @@ export default function Game() {
                                 }
                                 
                                 const randomType = Phaser.Math.RND.pick(validTypes);
-                                const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize/2;
-                                const y = this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize/2;
+                                const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize / 2;
+                                const y = this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize / 2;
                                 
                                 const orb = this.add.sprite(x, y, randomType)
                                     .setScale(2.5)
@@ -436,8 +390,8 @@ export default function Game() {
                                 if (!this.grid[0][col]) {
                                     hasEmptySpaces = true;
                                     const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                    const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize/2;
-                                    const y = this.startY + this.tileSize/2;
+                                    const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize / 2;
+                                    const y = this.startY + this.tileSize / 2;
                                     
                                     const orb = this.add.sprite(x, y - this.tileSize, randomType)
                                         .setScale(2.5)
@@ -490,7 +444,7 @@ export default function Game() {
                                         await new Promise(resolve => {
                                             this.tweens.add({
                                                 targets: orb,
-                                                y: this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize/2,
+                                                y: this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize / 2,
                                                 duration: 150,
                                                 ease: 'Bounce.easeOut',
                                                 onComplete: resolve
@@ -638,26 +592,16 @@ export default function Game() {
         }
     }, []);
 
-    // Modify the autoplay effect
     useEffect(() => {
-        let intervalId = null;
-        
         if (isAutoPlaying && gameInstance) {
             const scene = gameInstance.scene.scenes[0];
-            if (scene && !scene.isProcessing) {
-                console.log("Starting autoplay...");
-                intervalId = handleAutoPlay(scene);
+            if (scene) {
+                handleAutoPlay(scene);
             }
+        } else {
+            autoplayRef.current = false; // Stop the autoplay loop
         }
-
-        // Cleanup function
-        return () => {
-            if (intervalId) {
-                console.log("Cleaning up autoplay interval");
-                clearInterval(intervalId);
-            }
-        };
-    }, [isAutoPlaying, gameInstance, swapCount]);
+    }, [isAutoPlaying, gameInstance, swapCount, isMonsterDead]);
 
     // Monster counter-attack sequence
     const monsterCounterAttack = (scene) => {
@@ -709,11 +653,8 @@ export default function Game() {
         }
 
         try {
-            // Your transaction logic here
-            // This is just an example structure
-            const response = await contract.invoke('your_method', [
-                // your parameters
-            ]);
+            const contract = getGameContract(provider); // Ensure you pass the correct provider
+            const response = await contract.invoke('increase_balance', [amount]); // Replace 'amount' with the actual value
             console.log('Transaction submitted:', response);
         } catch (error) {
             console.error('Transaction failed:', error);
@@ -737,42 +678,7 @@ export default function Game() {
             <div className={styles['content-wrapper']}>
                 <button
                     onClick={handleAutoPlayClick}
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        right: '20px',
-                        padding: '12px 28px',
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        backgroundColor: isAutoPlaying ? '#ff6b81' : '#1dd1a1',
-                        color: 'white',
-                        border: '2px solid ' + (isAutoPlaying ? '#ff4757' : '#10ac84'),
-                        borderRadius: '30px',
-                        cursor: 'pointer',
-                        zIndex: 1000,
-                        boxShadow: isAutoPlaying 
-                            ? '0 0 15px rgba(255, 71, 87, 0.3)'
-                            : '0 0 15px rgba(29, 209, 161, 0.3)',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: 'scale(1)',
-                        animation: isAutoPlaying 
-                            ? 'pulse 2s infinite'
-                            : 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        overflow: 'hidden',
-                        WebkitTapHighlightColor: 'transparent',
-                        '&:hover': {
-                            transform: 'scale(1.05)',
-                            boxShadow: isAutoPlaying 
-                                ? '0 0 20px rgba(255, 71, 87, 0.4)'
-                                : '0 0 20px rgba(29, 209, 161, 0.4)',
-                        },
-                        '&:active': {
-                            transform: 'scale(0.95)',
-                        },
-                    }}
+                    className={`${styles['autoplay-button']} ${isAutoPlaying ? styles['autoplay-playing'] : styles['autoplay-stopped']}`}
                 >
                     <span style={{
                         display: 'inline-block',
@@ -816,7 +722,7 @@ export default function Game() {
                         />
                     </div>
                     <div className={styles['power-bar-monster']}>
-                        <div 
+                        <div    
                             className={styles['power-bar-monster-fill']}
                             style={{ width: `${monsterPower}%` }}
                         />
