@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Boat from './Boat';
 import Character from './Character';
+import NPC from './NPC';
 
 const Map = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -31,11 +32,60 @@ const Map = () => {
         style={{
           transformOrigin: 'center center',
         }}
-        onWheel={handleWheel}
+        // onWheel={handleWheel}
       >
         {/* Map content can be added here */}
         <Boat />
         <Character />
+
+        <NPC 
+          moveRange={{ 
+          x: { min: 300, max: 450 }, // Same as initialPosition.x
+          y: { min: 200, max: 400 }  // Same as initialPosition.y
+          }}
+          initialPosition={{ x: 450, y: 400 }}
+          hairStyle="longhair"
+          actionType="swim"
+          scale={1}
+          initialFacing="right"
+          /> 
+
+          <NPC 
+          moveRange={{ 
+          x: { min: 900, max: 1000 }, // Same as initialPosition.x
+          y: { min: 200, max: 400 }  // Same as initialPosition.y
+          }}
+          initialPosition={{ x: 950, y: 200 }}
+          hairStyle="shorthair"
+          actionType="swim"
+          scale={1}
+          initialFacing="right"
+          /> 
+
+<NPC 
+          moveRange={{ 
+          x: { min: 350, max: 450 }, // Same as initialPosition.x
+          y: { min: 200, max: 400 }  // Same as initialPosition.y
+          }}
+          initialPosition={{ x: 400, y: 200 }}
+          hairStyle="shorthair"
+          actionType="swim"
+          scale={1}
+          initialFacing="right"
+          /> 
+
+          <NPC 
+  moveRange={{ 
+    x: { min: 830, max: 830 }, // Same position for digging
+    y: { min: 300, max: 300 }  
+  }}
+  initialPosition={{ x: 830, y: 300 }}
+  hairStyle="spikeyhair"
+  actionType="dig"
+  scale={1}
+  initialFacing="left"
+/> 
+
       </div>
     </div>
   );

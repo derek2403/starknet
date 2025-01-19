@@ -6,14 +6,28 @@ const Character = ({ scale = 1 }) => {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [facingLeft, setFacingLeft] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-  const [initialPosition] = useState({ x: 523, y: 280 });
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  
+  // Define spawn points and speeds for different pages
+  const pageSettings = {
+    '/community': { 
+      spawn: { x: 300, y: 400 },
+      speed: 3  // Faster speed for community page
+    },
+    '/mapTest': { 
+      spawn: { x: 523, y: 280 },
+      speed: 1  // Normal speed for mapTest page
+    }
+  };
 
+  // Set initial position and movement speed based on current page
+  const [initialPosition] = useState(pageSettings[router.pathname]?.spawn || { x: 523, y: 280 });
+  const MOVEMENT_SPEED = pageSettings[router.pathname]?.speed || 1;
+
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const SPRITE_WIDTH = 96;
   const SPRITE_HEIGHT = 64;
   const TOTAL_FRAMES = 8;
   const ANIMATION_SPEED = 100; // Adjusted to match cat's animation speed
-  const MOVEMENT_SPEED = 1;
   const BASE_SCALE_FACTOR = 1;
 
   // Animation frame effect - only runs when character is moving
@@ -97,6 +111,11 @@ const Character = ({ scale = 1 }) => {
         if (absoluteX >= 518 && absoluteX <= 528 && absoluteY >= 250 && absoluteY <= 260) {
           router.push('/community');
         }
+
+        // Check for mapTest page transition
+    if (absoluteX >= 250 && absoluteX <= 350 && absoluteY === 470) {
+      router.push('/mapTest');
+    }
 
         return { x: newOffsetX, y: newOffsetY };
       });
