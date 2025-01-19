@@ -86,6 +86,20 @@ const Map = () => {
   initialFacing="left"
 /> 
 
+<NPC 
+  moveRange={{ 
+    x: { min: 590, max: 590 }, // Same position for watering
+    y: { min: 230, max: 230 }  
+  }}
+  initialPosition={{ x: 590, y: 230 }}
+  hairStyle="mophair"  // or any other hair style
+  actionType="watering"
+  scale={1}
+  initialFacing="right"
+/> 
+
+
+
       </div>
     </div>
   );

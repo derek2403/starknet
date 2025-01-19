@@ -43,6 +43,13 @@ const NPC = ({
       stripName: '_dig_strip13',
       shouldUpdateFacing: false  // Digging NPCs typically stay in one direction
     },
+    watering: {
+      totalFrames: 5,
+      animationSpeed: 150,
+      spriteFolder: 'watering',
+      stripName: '_watering_strip5',
+      shouldUpdateFacing: false
+    },
     // Add more actions as needed
     // walk: { ... },
     // jump: { ... },

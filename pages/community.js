@@ -10,9 +10,6 @@ const CommunityPage = () => {
 
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === '1') {
-        setShowMarketplace(prev => !prev);
-      }
       if (e.key === '2') {
         setShowForum(prev => !prev);
       }

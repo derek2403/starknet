@@ -54,6 +54,12 @@ const Character = ({ scale = 1 }) => {
     let moveInterval;
 
     const handleKeyDown = (e) => {
+      // Check for number "1" key press
+      if (e.key === '1') {
+        router.push('/mapTest');
+        return;
+      }
+
       const validKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
       if (!validKeys.includes(e.key)) return;
 
@@ -107,15 +113,20 @@ const Character = ({ scale = 1 }) => {
         
         console.log(`Character Position - X: ${absoluteX}, Y: ${absoluteY}`);
 
-        // Check if character is at the specific position (within ±5px range)
+        // Check for community page transition
         if (absoluteX >= 518 && absoluteX <= 528 && absoluteY >= 250 && absoluteY <= 260) {
           router.push('/community');
         }
 
         // Check for mapTest page transition
-    if (absoluteX >= 250 && absoluteX <= 350 && absoluteY === 470) {
-      router.push('/mapTest');
-    }
+        if (absoluteX >= 250 && absoluteX <= 350 && absoluteY === 470) {
+          router.push('/mapTest');
+        }
+
+        // Check for dungeon page transition
+        if (absoluteX >= 795 && absoluteX <= 805 && absoluteY === 240) {
+          router.push('/dungeon');
+        }
 
         return { x: newOffsetX, y: newOffsetY };
       });
