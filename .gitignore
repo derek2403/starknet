@@ -41,3 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .snfoundry_cache/
+target
+.snfoundry_cache/

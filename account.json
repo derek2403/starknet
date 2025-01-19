@@ -3,6 +3,21 @@
   "variant": {
     "type": "open_zeppelin",
     "version": 1,
+    "public_key": "0x7b3b9a171eea9a5304a98fe14a099f3a98cdffe908aca2dd895c5c8458914d0",
+    "legacy": false
+  },
+  "deployment": {
+    "status": "undeployed",
+    "class_hash": "0x4a444ef8caf8fa0db05da60bf0ad9bae264c73fa7e32c61d245406f5523174b",
+    "salt": "0x5986ac96532679b115c5dad57353c34fcb60a4305e4fe33c60e72640e8f6d94"
+  }
+}
+
+{
+  "version": 1,
+  "variant": {
+    "type": "open_zeppelin",
+    "version": 1,
     "public_key": "0x73573d4dd4500155af42e152bd9f8441c9d8d867ba68da528e716cbea73b9ba",
     "legacy": false
   },
