@@ -20,12 +20,167 @@ export default function Game() {
     const [showMonster, setShowMonster] = useState(true);
     const [showVictory, setShowVictory] = useState(false);
     const [showEmpty, setShowEmpty] = useState(false);
-    const [walletConnected, setWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState('');
+    const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+    const [gameActive, setGameActive] = useState(false);
+    const [gameInstance, setGameInstance] = useState(null);
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
             setCurrentImage(currentImage + 1);
+        }
+    };
+
+    // Add this improved AI agent function
+    const findBestMove = (scene) => {
+        if (!scene || !scene.grid) return null;
+        
+        let bestScore = 0;
+        let bestMove = null;
+
+        // Check each orb
+        for (let row = 0; row < scene.gridSize; row++) {
+            for (let col = 0; col < scene.gridSize; col++) {
+                // Check each adjacent position
+                const adjacentPositions = [
+                    [row - 1, col], // up
+                    [row + 1, col], // down
+                    [row, col - 1], // left
+                    [row, col + 1]  // right
+                ];
+
+                for (const [adjRow, adjCol] of adjacentPositions) {
+                    if (adjRow >= 0 && adjRow < scene.gridSize && 
+                        adjCol >= 0 && adjCol < scene.gridSize) {
+                        
+                        const orb1 = scene.grid[row][col];
+                        const orb2 = scene.grid[adjRow][adjCol];
+                        
+                        if (!orb1 || !orb2) continue;
+
+                        // Try the swap
+                        scene.grid[row][col] = orb2;
+                        scene.grid[adjRow][adjCol] = orb1;
+
+                        // Count potential matches
+                        const score = countPotentialMatches(scene, row, col, adjRow, adjCol);
+
+                        // Revert the swap
+                        scene.grid[row][col] = orb1;
+                        scene.grid[adjRow][adjCol] = orb2;
+
+                        // Update best move if this score is better
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = {
+                                orb1: { row, col },
+                                orb2: { adjRow, adjCol }
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        
+        return bestMove;
+    };
+
+    // Helper function to count matches after a swap
+    const countPotentialMatches = (scene, row1, col1, row2, col2) => {
+        let score = 0;
+        
+        // Check horizontal matches around both positions
+        for (let row of [row1, row2]) {
+            for (let col = Math.max(0, col1 - 2); col <= Math.min(scene.gridSize - 3, col1 + 2); col++) {
+                if (checkThreeInRow(scene, row, col)) score++;
+            }
+        }
+        
+        // Check vertical matches around both positions
+        for (let col of [col1, col2]) {
+            for (let row = Math.max(0, row1 - 2); row <= Math.min(scene.gridSize - 3, row1 + 2); row++) {
+                if (checkThreeInColumn(scene, row, col)) score++;
+            }
+        }
+        
+        return score;
+    };
+
+    // Helper function to check three in a row
+    const checkThreeInRow = (scene, row, col) => {
+        if (col + 2 >= scene.gridSize) return false;
+        
+        const orb1 = scene.grid[row][col];
+        const orb2 = scene.grid[row][col + 1];
+        const orb3 = scene.grid[row][col + 2];
+        
+        if (!orb1 || !orb2 || !orb3) return false;
+        
+        return orb1.getData('type') === orb2.getData('type') && 
+               orb2.getData('type') === orb3.getData('type');
+    };
+
+    // Helper function to check three in a column
+    const checkThreeInColumn = (scene, row, col) => {
+        if (row + 2 >= scene.gridSize) return false;
+        
+        const orb1 = scene.grid[row][col];
+        const orb2 = scene.grid[row + 1][col];
+        const orb3 = scene.grid[row + 2][col];
+        
+        if (!orb1 || !orb2 || !orb3) return false;
+        
+        return orb1.getData('type') === orb2.getData('type') && 
+               orb2.getData('type') === orb3.getData('type');
+    };
+
+    // Modify the handleAutoPlay function
+    const handleAutoPlay = (scene) => {
+        if (!scene || !gameActive) {
+            console.log("Scene or game not active");
+            return;
+        }
+
+        const makeMove = () => {
+            if (!scene.isProcessing && swapCount > 0 && gameActive && isAutoPlaying) {
+                console.log("Finding best move...");
+                const bestMove = findBestMove(scene);
+                
+                if (bestMove) {
+                    console.log("Found best move:", bestMove);
+                    const orb1 = scene.grid[bestMove.orb1.row][bestMove.orb1.col];
+                    const orb2 = scene.grid[bestMove.orb2.adjRow][bestMove.orb2.adjCol];
+                    
+                    if (orb1 && orb2) {
+                        console.log("Executing move...");
+                        scene.selectOrb(orb1);
+                        setTimeout(() => {
+                            scene.selectOrb(orb2);
+                        }, 200);
+                        return true;
+                    }
+                } else {
+                    console.log("No valid moves found");
+                }
+            }
+            return false;
+        };
+
+        if (isAutoPlaying) {
+            console.log("Setting up autoplay interval");
+            const interval = setInterval(() => {
+                if (swapCount === 0 || !gameActive || !isAutoPlaying) {
+                    console.log("Stopping autoplay");
+                    clearInterval(interval);
+                    setIsAutoPlaying(false);
+                } else {
+                    makeMove();
+                }
+            }, 1000);
+
+            return () => {
+                console.log("Cleaning up autoplay interval");
+                clearInterval(interval);
+            };
         }
     };
 
@@ -81,7 +236,31 @@ export default function Game() {
                         for (let row = 0; row < this.gridSize; row++) {
                             this.grid[row] = [];
                             for (let col = 0; col < this.gridSize; col++) {
-                                const randomType = Phaser.Math.RND.pick(this.orbTypes);
+                                let validTypes = [...this.orbTypes];
+                                
+                                // Remove types that would create initial matches
+                                if (row >= 2) {
+                                    // Check vertical matches
+                                    if (this.grid[row-1][col] && this.grid[row-2][col] &&
+                                        this.grid[row-1][col].getData('type') === this.grid[row-2][col].getData('type')) {
+                                        validTypes = validTypes.filter(type => type !== this.grid[row-1][col].getData('type'));
+                                    }
+                                }
+                                
+                                if (col >= 2) {
+                                    // Check horizontal matches
+                                    if (this.grid[row][col-1] && this.grid[row][col-2] &&
+                                        this.grid[row][col-1].getData('type') === this.grid[row][col-2].getData('type')) {
+                                        validTypes = validTypes.filter(type => type !== this.grid[row][col-1].getData('type'));
+                                    }
+                                }
+                                
+                                // If no valid types (rare case), reset validTypes to all types
+                                if (validTypes.length === 0) {
+                                    validTypes = [...this.orbTypes];
+                                }
+                                
+                                const randomType = Phaser.Math.RND.pick(validTypes);
                                 const x = this.startX + col * (this.tileSize + this.orbPadding) + this.tileSize/2;
                                 const y = this.startY + row * (this.tileSize + this.orbPadding) + this.tileSize/2;
                                 
@@ -108,6 +287,8 @@ export default function Game() {
                             frameRate: 12,
                             repeat: 0
                         });
+
+                        setGameActive(true);
                     }
 
                     selectOrb(orb) {
@@ -398,129 +579,17 @@ export default function Game() {
                         });
                     }
 
-                    async performAIMove() {
-                        if (!this.autoPlayEnabled || this.isProcessing) return;
-
-                        const bestMove = this.findBestMove();
-                        if (bestMove) {
-                            const { orb1, orb2 } = bestMove;
-                            await this.makeAIMove(orb1, orb2);
-                        }
-
-                        // Schedule next move
-                        setTimeout(() => {
-                            if (this.autoPlayEnabled) {
-                                this.performAIMove();
-                            }
-                        }, 500);
-                    }
-
-                    async makeAIMove(orb1, orb2) {
-                        this.selectOrb(orb1);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        this.selectOrb(orb2);
-                    }
-
-                    findBestMove() {
-                        let bestScore = -Infinity;
-                        let bestMove = null;
-                        const depth = 3; // How many moves to look ahead
-
-                        // Check each possible move
-                        for (let row = 0; row < this.gridSize; row++) {
-                            for (let col = 0; col < this.gridSize; col++) {
-                                // Check right swap
-                                if (col < this.gridSize - 1) {
-                                    const score = this.evaluateMove(row, col, row, col + 1, depth);
-                                    if (score > bestScore) {
-                                        bestScore = score;
-                                        bestMove = {
-                                            orb1: this.grid[row][col],
-                                            orb2: this.grid[row][col + 1]
-                                        };
-                                    }
-                                }
-                                // Check down swap
-                                if (row < this.gridSize - 1) {
-                                    const score = this.evaluateMove(row, col, row + 1, col, depth);
-                                    if (score > bestScore) {
-                                        bestScore = score;
-                                        bestMove = {
-                                            orb1: this.grid[row][col],
-                                            orb2: this.grid[row + 1][col]
-                                        };
-                                    }
-                                }
-                            }
-                        }
-                        return bestMove;
-                    }
-
-                    evaluateMove(row1, col1, row2, col2, depth) {
-                        if (depth === 0) return 0;
-
-                        // Create a deep copy of the grid for simulation
-                        const gridCopy = this.copyGrid();
-                        
-                        // Simulate the swap
-                        const temp = gridCopy[row1][col1];
-                        gridCopy[row1][col1] = gridCopy[row2][col2];
-                        gridCopy[row2][col2] = temp;
-
-                        // Find matches after swap
-                        const matches = this.findMatchesInGrid(gridCopy);
-                        if (matches.size === 0) return -1; // Invalid move
-
-                        let score = matches.size; // Base score is number of matched orbs
-
-                        // Simulate removing matches and dropping orbs
-                        const newGrid = this.simulateMatchRemovalAndDrop(gridCopy, matches);
-                        
-                        // Recursively evaluate possible next moves
-                        if (depth > 1) {
-                            let bestNextScore = -Infinity;
-                            
-                            // Check all possible next moves
-                            for (let r = 0; r < this.gridSize; r++) {
-                                for (let c = 0; c < this.gridSize; c++) {
-                                    if (c < this.gridSize - 1) {
-                                        const nextScore = this.evaluateMove(r, c, r, c + 1, depth - 1);
-                                        bestNextScore = Math.max(bestNextScore, nextScore);
-                                    }
-                                    if (r < this.gridSize - 1) {
-                                        const nextScore = this.evaluateMove(r, c, r + 1, c, depth - 1);
-                                        bestNextScore = Math.max(bestNextScore, nextScore);
-                                    }
-                                }
-                            }
-                            
-                            score += bestNextScore * 0.8; // Weight future moves less
-                        }
-
-                        return score;
-                    }
-
-                    copyGrid() {
-                        const newGrid = [];
-                        for (let row = 0; row < this.gridSize; row++) {
-                            newGrid[row] = [...this.grid[row]];
-                        }
-                        return newGrid;
-                    }
-
-                    findMatchesInGrid(grid) {
-                        const matches = new Set();
-
+                    checkForPotentialMatches() {
                         // Check horizontal matches
                         for (let row = 0; row < this.gridSize; row++) {
                             for (let col = 0; col < this.gridSize - 2; col++) {
-                                if (!grid[row][col]) continue;
-                                const type = grid[row][col].getData('type');
-                                if (grid[row][col + 1]?.getData('type') === type &&
-                                    grid[row][col + 2]?.getData('type') === type) {
-                                    matches.add(grid[row][col]);
-                                    matches.add(grid[row][col + 1]);
-                                    matches.add(grid[row][col + 2]);
+                                if (!this.grid[row][col]) continue;
+                                const type = this.grid[row][col].getData('type');
+                                if (this.grid[row][col + 1] && 
+                                    this.grid[row][col + 2] &&
+                                    type === this.grid[row][col + 1].getData('type') &&
+                                    type === this.grid[row][col + 2].getData('type')) {
+                                    return true;
                                 }
                             }
                         }
@@ -528,57 +597,17 @@ export default function Game() {
                         // Check vertical matches
                         for (let row = 0; row < this.gridSize - 2; row++) {
                             for (let col = 0; col < this.gridSize; col++) {
-                                if (!grid[row][col]) continue;
-                                const type = grid[row][col].getData('type');
-                                if (grid[row + 1][col]?.getData('type') === type &&
-                                    grid[row + 2][col]?.getData('type') === type) {
-                                    matches.add(grid[row][col]);
-                                    matches.add(grid[row + 1][col]);
-                                    matches.add(grid[row + 2][col]);
+                                if (!this.grid[row][col]) continue;
+                                const type = this.grid[row][col].getData('type');
+                                if (this.grid[row + 1][col] && 
+                                    this.grid[row + 2][col] &&
+                                    type === this.grid[row + 1][col].getData('type') &&
+                                    type === this.grid[row + 2][col].getData('type')) {
+                                    return true;
                                 }
                             }
                         }
-
-                        return matches;
-                    }
-
-                    simulateMatchRemovalAndDrop(grid, matches) {
-                        const newGrid = this.copyGrid();
-                        
-                        // Remove matches
-                        matches.forEach(orb => {
-                            const row = orb.getData('row');
-                            const col = orb.getData('col');
-                            newGrid[row][col] = null;
-                        });
-
-                        // Simulate gravity
-                        for (let col = 0; col < this.gridSize; col++) {
-                            let writeRow = this.gridSize - 1;
-                            for (let row = this.gridSize - 1; row >= 0; row--) {
-                                if (newGrid[row][col]) {
-                                    if (writeRow !== row) {
-                                        newGrid[writeRow][col] = newGrid[row][col];
-                                        newGrid[row][col] = null;
-                                    }
-                                    writeRow--;
-                                }
-                            }
-                        }
-
-                        // Fill empty spaces with random orbs
-                        for (let row = 0; row < this.gridSize; row++) {
-                            for (let col = 0; col < this.gridSize; col++) {
-                                if (!newGrid[row][col]) {
-                                    const randomType = Phaser.Math.RND.pick(this.orbTypes);
-                                    newGrid[row][col] = {
-                                        getData: () => ({ type: randomType, row, col })
-                                    };
-                                }
-                            }
-                        }
-
-                        return newGrid;
+                        return false;
                     }
                 }
 
@@ -592,8 +621,11 @@ export default function Game() {
                 };
 
                 const game = new Phaser.Game(config);
+                setGameInstance(game);
 
                 return () => {
+                    setGameActive(false);
+                    setGameInstance(null);
                     game.destroy(true);
                 };
             } catch (error) {
@@ -601,6 +633,17 @@ export default function Game() {
             }
         }
     }, []);
+
+    // Modify the autoplay effect
+    useEffect(() => {
+        if (isAutoPlaying && gameInstance) {
+            const scene = gameInstance.scene.scenes[0];
+            if (scene && !scene.isProcessing) {
+                console.log("Starting autoplay...");
+                handleAutoPlay(scene);
+            }
+        }
+    }, [isAutoPlaying, gameInstance, swapCount]);
 
     // Monster counter-attack sequence
     const monsterCounterAttack = (scene) => {
@@ -638,39 +681,37 @@ export default function Game() {
         }
     };
 
-    // Add wallet connection handler
-    const connectWallet = async () => {
-        try {
-            const starknet = await connect();
-            if (starknet) {
-                setWalletConnected(true);
-                const address = starknet.selectedAddress;
-                setWalletAddress(address);
-                console.log("Wallet connected:", address);
-            }
-        } catch (error) {
-            console.error("Error connecting wallet:", error);
-        }
-    };
-
-    // Add disconnect handler
-    const disconnectWallet = async () => {
-        try {
-            await disconnect();
-            setWalletConnected(false);
-            setWalletAddress('');
-            console.log("Wallet disconnected");
-        } catch (error) {
-            console.error("Error disconnecting wallet:", error);
-        }
+    // Add a click handler for the autoplay button that includes console logs
+    const handleAutoPlayClick = () => {
+        console.log("Autoplay button clicked, current state:", !isAutoPlaying);
+        setIsAutoPlaying(!isAutoPlaying);
     };
 
     return (
         <div 
             className={styles['game-container-wrapper']}
-            onClick={handleClick}  // Add click handler to whole container
+            onClick={handleClick}
         >
             <div className={styles['content-wrapper']}>
+                <button
+                    onClick={handleAutoPlayClick}
+                    style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        padding: '10px 20px',
+                        fontSize: '18px',
+                        backgroundColor: isAutoPlaying ? '#6a6a6a' : '#4a4a4a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        zIndex: 1000,
+                    }}
+                >
+                    {isAutoPlaying ? 'Stop Auto' : 'Auto'}
+                </button>
+                
                 <div className={styles['top-section']}>
                     <div className={styles['health-bar-monster-label']}>
                        Eldrakor
