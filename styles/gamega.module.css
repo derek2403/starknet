@@ -233,35 +233,27 @@
     z-index: 999;
 }
 
+/* Add these styles for the wallet connect button positioning */
+.wallet-connect-wrapper {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
 .wallet-section {
     position: absolute;
     top: 20px;
-    right: 20px;
+    left: 20px;
     z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
 }
 
-.wallet-button {
-    background-color: #4a4a4a;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.wallet-error {
+    color: #ff4444;
     margin-top: 10px;
-}
-
-.wallet-button:hover {
-    background-color: #666666;
-}
-
-.wallet-address {
-    color: white;
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
     font-size: 14px;
 } 

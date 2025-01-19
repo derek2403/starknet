@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
-import { connect, disconnect } from 'get-starknet';
+import { useAccount, useContract, useStarknetExecute } from '@starknet-react/core';
+import { WalletConnect } from '../components/WalletConnect';
 
 // Only the first 5 movements for the game board
 const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
 
 export default function Game() {
+    console.log("Game component rendering");
+
     const router = useRouter();
     const [currentImage, setCurrentImage] = useState(1);
     const [humanPower, setHumanPower] = useState(0);
@@ -23,6 +26,8 @@ export default function Game() {
     const [isAutoPlaying, setIsAutoPlaying] = useState(false);
     const [gameActive, setGameActive] = useState(false);
     const [gameInstance, setGameInstance] = useState(null);
+    const { address, isConnected } = useAccount();
+    const [walletError, setWalletError] = useState('');
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -165,6 +170,7 @@ export default function Game() {
             return false;
         };
 
+        // Store interval ID in a ref to access it later
         if (isAutoPlaying) {
             console.log("Setting up autoplay interval");
             const interval = setInterval(() => {
@@ -177,10 +183,8 @@ export default function Game() {
                 }
             }, 1000);
 
-            return () => {
-                console.log("Cleaning up autoplay interval");
-                clearInterval(interval);
-            };
+            // Store the interval ID
+            return interval;
         }
     };
 
@@ -636,13 +640,23 @@ export default function Game() {
 
     // Modify the autoplay effect
     useEffect(() => {
+        let intervalId = null;
+        
         if (isAutoPlaying && gameInstance) {
             const scene = gameInstance.scene.scenes[0];
             if (scene && !scene.isProcessing) {
                 console.log("Starting autoplay...");
-                handleAutoPlay(scene);
+                intervalId = handleAutoPlay(scene);
             }
         }
+
+        // Cleanup function
+        return () => {
+            if (intervalId) {
+                console.log("Cleaning up autoplay interval");
+                clearInterval(intervalId);
+            }
+        };
     }, [isAutoPlaying, gameInstance, swapCount]);
 
     // Monster counter-attack sequence
@@ -687,11 +701,39 @@ export default function Game() {
         setIsAutoPlaying(!isAutoPlaying);
     };
 
+    // Example of how to handle a transaction
+    const handleGameTransaction = async () => {
+        if (!isConnected) {
+            setWalletError('Please connect your wallet first');
+            return;
+        }
+
+        try {
+            // Your transaction logic here
+            // This is just an example structure
+            const response = await contract.invoke('your_method', [
+                // your parameters
+            ]);
+            console.log('Transaction submitted:', response);
+        } catch (error) {
+            console.error('Transaction failed:', error);
+            setWalletError('Transaction failed: ' + error.message);
+        }
+    };
+
+    const walletSection = (
+        <div className={styles['wallet-section']}>
+            <WalletConnect />
+            {walletError && (
+                <p className={styles['wallet-error']}>{walletError}</p>
+            )}
+        </div>
+    );
+
     return (
-        <div 
-            className={styles['game-container-wrapper']}
-            onClick={handleClick}
-        >
+        <div className={styles['game-container-wrapper']}>
+            <WalletConnect />
+            
             <div className={styles['content-wrapper']}>
                 <button
                     onClick={handleAutoPlayClick}
