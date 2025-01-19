@@ -34,13 +34,17 @@ const CommunityPage = () => {
         >
           <Character scale={2} />
           {showMarketplace && (
-            <div className="absolute inset-0 bg-black bg-opacity-50">
-              <Marketplace />
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="w-[50%]">
+                <Marketplace />
+              </div>
             </div>
           )}
           {showForum && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <Forum onClose={() => setShowForum(false)} />
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="w-[50%]">
+                <Forum onClose={() => setShowForum(false)} />
+              </div>
             </div>
           )}
         </div>
