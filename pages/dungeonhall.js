@@ -1,106 +1,110 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../styles/DungeonGame.module.css';
 import { useRouter } from 'next/router';
-import NPC from '../pages/components/NPC.js';
-
-const actions = ['a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 
-                'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1', 'a1'];
+import Character from '../components/Character.js';
 
 export default function DungeonGame() {
   const router = useRouter();
-  const [position, setPosition] = useState({ x: 907, y: 733 });
-  const [characterLoaded, setCharacterLoaded] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-  
-  const MOVE_SPEED = 30;
-  const PORTAL_X = 657;
-  const PORTAL_THRESHOLD = 20; // Detection range for portal
 
+  // Portal check effect
   useEffect(() => {
-    console.log("All dungeon actions:", actions);
-    
-    // Only handle dungeon moves here
-    const dungeonMoves = actions.filter(action => action.length === 2);
-    console.log("Dungeon movements:", dungeonMoves);
-    console.log("Number of dungeon moves:", dungeonMoves.length);
-
-    // Check if character is near the portal
-    if (Math.abs(position.x - PORTAL_X) <= PORTAL_THRESHOLD && !showNotification) {
-      setShowNotification(true);
-      
-      // Wait 3 seconds then redirect
+    if (showNotification) {
       setTimeout(() => {
         router.push('/mapTest');
       }, 3000);
     }
-  }, [position.x]);
-
-  useEffect(() => {
-    const characterImage = new Image();
-    characterImage.src = '/human.png';
-    characterImage.onload = () => setCharacterLoaded(true);
-
-    const handleKeyPress = (e) => {
-      switch(e.key.toLowerCase()) {
-        case 'w':
-          setPosition(prev => ({ ...prev, y: prev.y - MOVE_SPEED }));
-          break;
-        case 's':
-          setPosition(prev => ({ ...prev, y: prev.y + MOVE_SPEED }));
-          break;
-        case 'a':
-          setPosition(prev => ({ ...prev, x: prev.x - MOVE_SPEED }));
-          break;
-        case 'd':
-          setPosition(prev => ({ ...prev, x: prev.x + MOVE_SPEED }));
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
-
-  if (!characterLoaded) {
-    return <div>Loading assets...</div>;
-  }
+  }, [showNotification, router]);
 
   return (
-    <div className={styles.gameContainer}
-         style={{
-           backgroundImage: 'url(/dungeon/dback.gif)',
-           backgroundSize: 'cover',
-           backgroundPosition: 'center',
-           backgroundRepeat: 'no-repeat'
-         }}>
-      <div className={styles.map}>
+    <div 
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Background Layer */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: 'url(/dungeon/dback.gif)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 1
+        }}
+      />
+
+      {/* Map Layer */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 2
+        }}
+      >
         <img 
           src="/dungeon/dungeonhall.png" 
           alt="Dungeon Map"
-          className={styles.mapImage}
-        />
-        <div 
-          className={styles.character}
           style={{
-            position: 'absolute',
-            left: `${position.x}px`,
-            top: `${position.y}px`,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain'
+          }}
+        />
+      </div>
+
+      {/* Character Layer */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 3
+        }}
+      >
+        <Character 
+          moveRange={{ 
+            x: { min: 0, max: 1000 },
+            y: { min: 0, max: 800 }
+          }}
+          initialPosition={{ x: 500, y: 400 }}
+          hairStyle="spikeyhair"
+          actionType="run"
+          scale={2}
+          initialFacing="right"
+          MOVEMENT_SPEED={10}  // Updated to use correct prop name and value
+        />
+      </div>
+
+      {/* Notification Layer */}
+      {showNotification && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '20px',
+            borderRadius: '10px',
+            zIndex: 4
           }}
         >
-          <NPC 
-            moveRange={{ x: { min: 0, max: 0 }, y: { min: 0, max: 0 }}}
-            initialPosition={{ x: 0, y: 0 }}
-            hairStyle="spikeyhair"
-            actionType="idle"
-            scale={3.5}
-          />
+          Directing you to outside world...
         </div>
-        {showNotification && (
-          <div className={styles.notification}>
-            Directing you to outside world...
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
