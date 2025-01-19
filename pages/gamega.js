@@ -697,20 +697,71 @@ export default function Game() {
                     onClick={handleAutoPlayClick}
                     style={{
                         position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        padding: '10px 20px',
-                        fontSize: '18px',
-                        backgroundColor: isAutoPlaying ? '#6a6a6a' : '#4a4a4a',
+                        top: '20px',
+                        right: '20px',
+                        padding: '12px 28px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        backgroundColor: isAutoPlaying ? '#ff6b81' : '#1dd1a1',
                         color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
+                        border: '2px solid ' + (isAutoPlaying ? '#ff4757' : '#10ac84'),
+                        borderRadius: '30px',
                         cursor: 'pointer',
                         zIndex: 1000,
+                        boxShadow: isAutoPlaying 
+                            ? '0 0 15px rgba(255, 71, 87, 0.3)'
+                            : '0 0 15px rgba(29, 209, 161, 0.3)',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'scale(1)',
+                        animation: isAutoPlaying 
+                            ? 'pulse 2s infinite'
+                            : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        overflow: 'hidden',
+                        WebkitTapHighlightColor: 'transparent',
+                        '&:hover': {
+                            transform: 'scale(1.05)',
+                            boxShadow: isAutoPlaying 
+                                ? '0 0 20px rgba(255, 71, 87, 0.4)'
+                                : '0 0 20px rgba(29, 209, 161, 0.4)',
+                        },
+                        '&:active': {
+                            transform: 'scale(0.95)',
+                        },
                     }}
                 >
-                    {isAutoPlaying ? 'Stop Auto' : 'Auto'}
+                    <span style={{
+                        display: 'inline-block',
+                        transform: isAutoPlaying ? 'scale(1.1)' : 'scale(1)',
+                        transition: 'transform 0.3s ease',
+                    }}>
+                        {isAutoPlaying ? '⏹' : '▶'}
+                    </span>
+                    <span style={{
+                        position: 'relative',
+                        display: 'inline-block',
+                        transform: 'translateY(0)',
+                        transition: 'transform 0.3s ease',
+                    }}>
+                        {isAutoPlaying ? 'Stop Auto' : 'Auto'}
+                    </span>
                 </button>
+                
+                <style jsx global>{`
+                    @keyframes pulse {
+                        0% {
+                            box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+                        }
+                        50% {
+                            box-shadow: 0 0 25px rgba(255, 71, 87, 0.5);
+                        }
+                        100% {
+                            box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+                        }
+                    }
+                `}</style>
                 
                 <div className={styles['top-section']}>
                     <div className={styles['health-bar-monster-label']}>
