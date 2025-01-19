@@ -1,0 +1,322 @@
+.game-container-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-image: url('/monster/dungeonback.gif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+/* gamega.module.css */
+.autoplay-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    border-radius: 30px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.autoplay-playing {
+    background-color: #ff6b81;
+    border: 2px solid #ff4757;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.autoplay-playing:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+}
+
+.autoplay-playing:active {
+    transform: scale(0.95);
+}
+
+.autoplay-stopped {
+    background-color: #1dd1a1;
+    border: 2px solid #10ac84;
+    box-shadow: 0 0 15px rgba(29, 209, 161, 0.3);
+    animation: none;
+}
+
+.autoplay-stopped:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(29, 209, 161, 0.4);
+}
+
+.autoplay-stopped:active {
+    transform: scale(0.95);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 71, 87, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+    }
+}
+
+.content-wrapper {
+    background-color: rgba(31, 60, 40, 0.31);
+    padding: 20px;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    height: 1200px;
+    width: 1200px;
+    max-width: 1200px;
+}
+
+/* Top section container */
+.top-section {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;  /* Add this */
+    background-color: transparent;  /* Make transparent */
+}
+
+.monster-animation {
+    margin-left: auto;
+    margin-right: 80px; /*adjust left right */
+    position: relative;
+    top: 50px;         /* Changed from -120px to move down */
+}
+
+.monster-animation img {
+    width: 220px;
+    height: 220px;
+    object-fit: contain;
+}
+
+/* Middle section container */
+.middle-section {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    background-color: transparent;  /* Make transparent */
+}
+
+.human-image {
+    position: absolute;
+    top: 10px;         /* Increased from 50px to move down */
+    left: 100px;
+    z-index: 2;
+    max-width: 400px;
+}
+
+.human-image img {
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: contain;
+}
+
+.light-frame {
+    z-index: 1;
+    text-align: center;
+    width: 1500px;
+    height: 5px;
+    position: relative;
+    top: 55px;
+    left: 230px;
+    cursor: pointer;  /* Add this to show it's clickable */
+}
+
+.light-frame img {
+    padding-top: 10px;
+    height: 370px;
+    width: 940px;
+    transition: opacity 0.3s ease;  /* Smooth transition between images */
+}
+
+.game-container {
+    width: 709px;
+    height: 609px;
+    position: relative;
+    margin-top: auto;        /* Push to bottom */
+    margin-bottom: 20px;     /* Space from bottom edge */
+    top: 20px;              /* Additional adjustment to move down */
+}
+
+/* Game board content should be behind the frame */
+.game-container > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Frame should be in front */
+.game-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.health-bar-monster {
+    position: absolute;
+    width: 150px;
+    height: 20px;
+    background-color: #333;
+    border: 2px solid #000;
+    border-radius: 10px;
+    right: 250px;  /* Increased from 200px to move more left */
+    top: 50px;
+    overflow: hidden;
+}
+
+.health-bar-monster-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #2ecc71;  /* Green color */
+    transition: width 0.3s ease;
+}
+
+.health-bar-human {
+    position: absolute;
+    width: 150px;
+    height: 20px;
+    background-color: #333;
+    border: 2px solid #000;
+    border-radius: 10px;
+    left: 280px;
+    top: 40px;
+    overflow: hidden;
+    z-index: 998;
+}
+
+.health-bar-human-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #e74c3c;  /* Red color */
+    transition: width 0.3s ease;
+}
+
+.health-bar-monster-label {
+    position: absolute;
+    right: 310px;
+    top: 20px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 2px #000;
+    z-index: 10;
+}
+
+.health-bar-human-label {
+    position: absolute;
+    left: 290px;
+    top: 10px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 2px #000;
+    z-index: 999;
+    background: transparent;
+}
+
+.power-bar-monster {
+    position: absolute;
+    width: 150px;
+    height: 15px;
+    background-color: #333;
+    border: 2px solid #000;
+    border-radius: 10px;
+    right: 250px;     /* Align with health bar */
+    top: 80px;        /* Position below health bar */
+    overflow: hidden;
+    z-index: 999;     /* Ensure visibility */
+}
+
+.power-bar-monster-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #9b59b6;  /* Purple color for power */
+    transition: width 0.3s ease;
+}
+
+.power-bar-human {
+    position: absolute;
+    width: 150px;
+    height: 15px;
+    background-color: #333;
+    border: 2px solid #000;
+    border-radius: 10px;
+    left: 280px;  /* Match health bar position */
+    top: 70px;   /* Position below health bar */
+    overflow: hidden;
+    z-index: 998;
+}
+
+.power-bar-human-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #3498db;  /* Blue color for power */
+    transition: width 0.3s ease;
+}
+
+.swap-counter {
+    position: absolute;
+    left: 100px;      /* Match power bar position */
+    top: 150px;       /* Position below power bar */
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    text-shadow: 2px 2px 2px #000;
+    z-index: 999;
+}
+
+/* Add these styles for the wallet connect button positioning */
+.wallet-connect-wrapper {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.wallet-section {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+}
+
+.wallet-error {
+    color: #ff4444;
+    margin-top: 10px;
+    font-size: 14px;
+} 
