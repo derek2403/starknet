@@ -93,8 +93,8 @@ const Character = ({ scale = 1 }) => {
         
         console.log(`Character Position - X: ${absoluteX}, Y: ${absoluteY}`);
 
-        // Check if character is at the specific position
-        if (absoluteX === 523 && absoluteY === 255) {
+        // Check if character is at the specific position (within ±5px range)
+        if (absoluteX >= 518 && absoluteX <= 528 && absoluteY >= 250 && absoluteY <= 260) {
           router.push('/community');
         }
 
