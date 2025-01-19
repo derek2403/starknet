@@ -38,3 +38,15 @@ body {
   transform: scale(1);
 }
 
+@layer utilities {
+  .pixelated {
+    image-rendering: pixelated;
+  }
+  
+  .font-pixel {
+    font-family: 'Press Start 2P', monospace;
+  }
+}
+
+
+

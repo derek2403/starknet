@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-const Character = () => {
+const Character = ({ scale = 1 }) => {
   const router = useRouter();
   const [currentFrame, setCurrentFrame] = useState(0);
   const [facingLeft, setFacingLeft] = useState(false);
@@ -14,7 +14,7 @@ const Character = () => {
   const TOTAL_FRAMES = 8;
   const ANIMATION_SPEED = 100; // Adjusted to match cat's animation speed
   const MOVEMENT_SPEED = 1;
-  const SCALE_FACTOR = 1;
+  const BASE_SCALE_FACTOR = 1;
 
   // Animation frame effect - only runs when character is moving
   useEffect(() => {
@@ -131,7 +131,7 @@ const Character = () => {
     position: 'absolute',
     left: `${initialPosition.x + offset.x}px`,
     top: `${initialPosition.y + offset.y}px`,
-    transform: `scaleX(${facingLeft ? -1 : 1}) scale(${SCALE_FACTOR})`,
+    transform: `scaleX(${facingLeft ? -1 : 1}) scale(${BASE_SCALE_FACTOR * scale})`,
     transition: 'transform 0.1s ease-in-out',
     pointerEvents: 'none'
   });
