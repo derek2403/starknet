@@ -30,7 +30,7 @@ export default function DungeonGame() {
       
       // Wait 3 seconds then redirect
       setTimeout(() => {
-        router.push('/realrealworld');
+        router.push('/mapTest');
       }, 3000);
     }
   }, [position.x]);

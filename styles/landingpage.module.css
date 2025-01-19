@@ -38,14 +38,14 @@
 
 .sunnybackContainer {
   position: absolute;
-  left: 500px;
-  top: 450px;
-  z-index: 2;  /* Make sure it appears above the landing gif */
-  transform: scale(4.5);  /* Added to make the image 2.5 times larger */
+  left: 100px;     /* Decreased from 500px to move left */
+  top: 150px;
+  z-index: 2;
+  transform: scale(2.2);
 }
 
 .sunnybackImage {
-  width: auto;  /* Maintains original aspect ratio */
+  width: auto;
   height: auto;
   object-fit: contain;
 }
