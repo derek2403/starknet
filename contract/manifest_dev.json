@@ -1252,7 +1252,7 @@
   },
   "contracts": [
     {
-      "address": "0x34dc41c7ec3759b9c5fe447463820d9cedb8eac4d61bd62de7c691cf4eb4aea",
+      "address": "0x688575ca5fee79e3c7121b25dd91c940b2ff12ce08ce85ae454b4b364232185",
       "class_hash": "0xde14ef833eedee5b65b32d44cef961c86a3584eb176d84352b749f7def5a32",
       "abi": [
         {
@@ -1485,8 +1485,8 @@
         }
       ],
       "init_calldata": [],
-      "tag": "dojo_starter-actions",
-      "selector": "0x7a1c71029f2d0b38e3ac89b09931d08b6e48417e079c289ff19a8698d0cba33",
+      "tag": "my_game-actions",
+      "selector": "0x3700842185985456331e0d83ec318ecf905cb3c531528dfe241991926a38252",
       "systems": [
         "spawn",
         "move",
@@ -1499,40 +1499,40 @@
     {
       "members": [],
       "class_hash": "0x3f52c6cf17db224f4e7f88629adf7e907ff110baa0616c7e8ef17c5aecf1b1b",
-      "tag": "dojo_starter-DirectionsAvailable",
-      "selector": "0x77844f1facb51e60e546a9832d56c6bd04fa23be4fd5b57290caae5e9a3c1e4"
+      "tag": "my_game-DirectionsAvailable",
+      "selector": "0x2657ae54bfd4e1c5e069514bb999e9683ef688d1fed30ab23a8a592b1ef5aab"
     },
     {
       "members": [],
       "class_hash": "0x369c0bb1358d24f2acbc7879e19a17d0d0e1e08ad8eb43cb22324ef142f49e6",
-      "tag": "dojo_starter-Message",
-      "selector": "0x2e5982640cef708845349a1f52eebdf4b1c8431c32b95810c031fe0832d3e76"
+      "tag": "my_game-Message",
+      "selector": "0x4c19318f370468ba0e60d9304d129d02e77d00017883683674b21625ce1c7ad"
     },
     {
       "members": [],
       "class_hash": "0x5f79e21312b142fc289d3bd1e0f4c65ac3c4e532252c6fb1ad48b718d892dc",
-      "tag": "dojo_starter-Moves",
-      "selector": "0x2a29373f1af8348bd366a990eb3a342ef2cbe5e85160539eaca3441a673f468"
+      "tag": "my_game-Moves",
+      "selector": "0x7cd4fa2d8e3539390a391db316c5ded03cbbf9d60a03c9f93f6c5419ce989f"
     },
     {
       "members": [],
       "class_hash": "0x2283c68ecba5c60bbbbd3b00659808a02244468e41a1d2cdba1312d65b83594",
-      "tag": "dojo_starter-Position",
-      "selector": "0x2ac8b4c190f7031b9fc44312e6b047a1dce0b3f2957c33a935ca7846a46dd5b"
+      "tag": "my_game-Position",
+      "selector": "0x5ce33b7fd1c09b06b131cd742b09c8e8a9211110400ff0f56d700112f753e9b"
     }
   ],
   "events": [
     {
       "members": [],
       "class_hash": "0x3c1ec998d650597116636ffba8c589a0b8bbe86f34ac1dd116e4c94886e5cbe",
-      "tag": "dojo_starter-MessageStored",
-      "selector": "0x345ebd74544d95655e420a8836f7537f04a1720e727124868d7e4d23bcd71f9"
+      "tag": "my_game-MessageStored",
+      "selector": "0x709dbf435236bafc515b501dc48cfcfebceeda2f0141c2b9eef441cb0f97a13"
     },
     {
       "members": [],
       "class_hash": "0x3dca5564f84050b20e66a2e5e7619201502d241b223ea73cfc05f29e6e20ea1",
-      "tag": "dojo_starter-Moved",
-      "selector": "0x504403e5c02b6442527721fc464d9ea5fc8f1ee600ab5ccd5c0845d36fd45f1"
+      "tag": "my_game-Moved",
+      "selector": "0x6a1799f617b74442186272979a6d346b5ff1aea76a6fa7ac492eb52de2bc34c"
     }
   ]
 }
