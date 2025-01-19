@@ -19,3 +19,34 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes zoomOut {
+  from {
+    transform: scale(3);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.map-zoom-animation {
+  transform: scale(1.7);
+  transition: transform 0.3s ease-out;
+}
+
+.map-zoom-animation.zoomed-out {
+  transform: scale(1);
+}
+
+@layer utilities {
+  .pixelated {
+    image-rendering: pixelated;
+  }
+  
+  .font-pixel {
+    font-family: 'Press Start 2P', monospace;
+  }
+}
+
+
+
