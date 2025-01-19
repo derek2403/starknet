@@ -10,10 +10,10 @@ const CommunityPage = () => {
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === '1') {
-        setShowMarketplace(prev => !prev); // Toggle marketplace visibility
+        setShowMarketplace(prev => !prev);
       }
       if (e.key === '2') {
-        setShowForum(prev => !prev); // Toggle forum visibility
+        setShowForum(prev => !prev);
       }
     };
 
@@ -22,22 +22,28 @@ const CommunityPage = () => {
   }, []);
 
   return (
-    <div className="flex justify-center w-screen h-screen bg-black">
+    <div className="relative w-screen h-screen">
       <div 
-        className="relative w-[50%] h-full bg-contain bg-center bg-no-repeat overflow-hidden"
-        style={{ backgroundImage: 'url("/background/community.png")' }}
-      >
-        <Character scale={2} />
-        {showMarketplace && (
-          <div className="absolute inset-0 bg-black bg-opacity-50">
-            <Marketplace />
-          </div>
-        )}
-        {showForum && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <Forum onClose={() => setShowForum(false)} />
-          </div>
-        )}
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url("/background/background.jpg")' }}
+      />
+      <div className="flex justify-center w-screen h-screen relative">
+        <div 
+          className="relative w-[50%] h-full bg-contain bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url("/background/community.png")' }}
+        >
+          <Character scale={2} />
+          {showMarketplace && (
+            <div className="absolute inset-0 bg-black bg-opacity-50">
+              <Marketplace />
+            </div>
+          )}
+          {showForum && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <Forum onClose={() => setShowForum(false)} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

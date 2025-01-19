@@ -8,13 +8,13 @@ const Forum = ({ onClose }) => {
       id: 1,
       title: "Welcome to our Community",
       description: "Introduction and guidelines for new members",
-      content: "Welcome to our community! Here are the full guidelines and rules..."
+      content: "Welcome to our community! We're excited to have you join us. This space is designed to foster meaningful discussions, share knowledge, and build connections. To ensure a positive experience for everyone, please follow our community guidelines: Be respectful of all members, avoid offensive language, share constructive feedback, and help maintain a supportive environment. Feel free to participate in discussions, ask questions, and share your expertise. If you need help, our moderators are here to assist you. Let's work together to make this a valuable resource for everyone!"
     },
     {
       id: 2,
       title: "Technical Discussion",
       description: "Discuss technical topics and share knowledge",
-      content: "This is the full content of the technical discussion forum..."
+      content: "This is the space for in-depth technical discussions and knowledge sharing. Whether you're a beginner looking to learn or an expert willing to share insights, you're in the right place. We encourage discussions about programming languages, frameworks, best practices, system architecture, and innovative solutions. Remember to provide context when asking questions, share code examples when relevant, and explain your solutions thoroughly. This helps others learn and ensures meaningful discussions. Feel free to share your experiences, challenges, and success stories. Together, we can create a valuable knowledge base for our technical community."
     },
   ]);
 
@@ -47,20 +47,20 @@ const Forum = ({ onClose }) => {
 
   return (
     <div className="w-3/4 h-[80vh] bg-white rounded-xl shadow-2xl p-8 mx-auto overflow-y-auto scrollbar-hide relative">
-      <div className="flex justify-between items-center mb-8">
+      <div className="relative flex justify-center items-center mb-8">
         {(selectedForum || isAddingForum) && (
           <button 
             onClick={handleBack}
-            className="text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-blue-50"
+            className="absolute left-0 text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-blue-50"
           >
             <span className="text-xl">←</span> Back
           </button>
         )}
-        <h1 className={`text-2xl font-bold text-blue-600 ${(selectedForum || isAddingForum) ? 'mx-auto' : ''}`}>
+        <h1 className="text-2xl font-bold text-blue-600 text-center">
           Community Forum
         </h1>
         <button 
-          className="text-3xl text-blue-600 hover:text-red-500 transition-colors ml-auto w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-50"
+          className="absolute right-0 text-3xl text-blue-600 hover:text-red-500 transition-colors w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-50"
           onClick={onClose}
         >
           ×
