@@ -27,6 +27,7 @@ export default function Game() {
     const [aiInterval, setAiInterval] = useState(null);
     const [gameInitialized, setGameInitialized] = useState(false);
     const [isProcessingMove, setIsProcessingMove] = useState(false);
+    const [canCloseNotification, setCanCloseNotification] = useState(false);
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -487,16 +488,45 @@ export default function Game() {
             // Monster defeated
             setShowMonster(false);
             setShowVictory(true);
-            setTimeout(() => {
+            
+            // Show notification after victory
+            const notificationTimer = setTimeout(() => {
                 setShowNoItemDrop(true);
-            }, 3000); // Wait 3 seconds after victory
+                
+                // Start the 10-second wait timer only after notification is shown
+                const closeTimer = setTimeout(() => {
+                    setCanCloseNotification(true);
+                }, 10000);
+
+                // Cleanup timers if component unmounts
+                return () => {
+                    clearTimeout(closeTimer);
+                };
+            }, 3000);
+
+            // Cleanup victory timer if component unmounts
+            return () => {
+                clearTimeout(notificationTimer);
+            };
         }
     }, [monsterHealth]);
 
-    // Only close and redirect when player clicks the close button
-    const handleClose = () => {
-        setShowNoItemDrop(false);
-        router.push('/dungeonhall');
+    // Modify handleClose to be more explicit about the flow
+    const handleClose = (e) => {
+        // Prevent any default behaviors
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Only allow closing if the wait period is over
+        if (canCloseNotification) {
+            setShowNoItemDrop(false);
+            // Add a small delay before redirecting
+            setTimeout(() => {
+                router.push('/dungeonhall');
+            }, 100);
+        }
     };
 
     // Modify findBestMove to strictly check isAIPlaying
@@ -701,23 +731,27 @@ export default function Game() {
 
             {/* Full Screen No Item Drop Notification */}
             {showNoItemDrop && (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-                     onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling up
+                <div 
+                    className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
                 >
-                    {/* Dark overlay */}
                     <div className="absolute inset-0 bg-black bg-opacity-80" />
                     
-                    {/* Notification Content */}
                     <div className="relative z-50 w-screen h-screen flex flex-col items-center justify-center">
-                        {/* Close Button */}
                         <button
                             onClick={handleClose}
-                            className="absolute top-4 right-4 w-10 h-10 bg-gray-800 hover:bg-gray-700 
-                                     rounded-full flex items-center justify-center z-50 
-                                     transition-colors transform hover:scale-110 active:scale-95"
+                            disabled={!canCloseNotification}
+                            className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-50 
+                                       transition-colors transform hover:scale-110 active:scale-95
+                                       ${canCloseNotification 
+                                           ? 'bg-gray-800 hover:bg-gray-700 cursor-pointer' 
+                                           : 'bg-gray-500 cursor-not-allowed'}`}
                         >
                             <svg 
-                                className="w-6 h-6 text-white" 
+                                className={`w-6 h-6 ${canCloseNotification ? 'text-white' : 'text-gray-400'}`}
                                 fill="none" 
                                 stroke="currentColor" 
                                 viewBox="0 0 24 24"
@@ -731,10 +765,17 @@ export default function Game() {
                             </svg>
                         </button>
 
+                        {!canCloseNotification && (
+                            <div className="absolute top-6 right-16 text-white">
+                                Please wait 10 seconds...
+                            </div>
+                        )}
+
                         <img 
                             src="/notif/noitemdrop.png"
                             alt="No Item Drop"
                             className="w-full h-full object-contain"
+                            onClick={(e) => e.stopPropagation()}
                         />
                     </div>
                 </div>
