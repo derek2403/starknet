@@ -3,28 +3,30 @@ import Character from '../components/Character';
 import Marketplace from '../components/Marketplace';
 import Forum from '../components/Forum';
 import NPC from '../components/NPC';
-import { GeistSans } from 'geist/font'
+import { fontSans } from '../lib/fonts'
 import Inventory from '../components/inventory'
-
-const font = GeistSans
+import { useRouter } from 'next/router';
 
 const CommunityPage = () => {
   const [showMarketplace, setShowMarketplace] = useState(false);
   const [showForum, setShowForum] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key === '2') {
+      if (e.key === '1') {
+        router.push('/marketplace');
+      } else if (e.key === '2') {
         setShowForum(prev => !prev);
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [router]);
 
   return (
-    <main className={`${font.className} min-h-screen relative`}>
+    <main className={`${fontSans.className} min-h-screen relative`}>
       <div className="relative w-screen h-screen">
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"

@@ -1,18 +1,18 @@
-import { Inter } from 'next/font/google'
-import { GeistSans } from 'geist/font'
+import { fontSans } from '../lib/fonts'
 import { useState, useEffect } from 'react'
 import Character from '../components/Character'
 import Inventory from '../components/inventory'
-
-const inter = Inter({ subsets: ['latin'] })
-const font = GeistSans
+import { useRouter } from 'next/router'
 
 export default function Marketplace() {
+  const router = useRouter()
   const [showNoBuy, setShowNoBuy] = useState(false)
 
   const handleKeyPress = (event) => {
     if (event.key === '1') {
       setShowNoBuy(prev => !prev)
+    } else if (event.key === '0') {
+      router.push('/map')
     }
   }
 
@@ -24,10 +24,10 @@ export default function Marketplace() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [])
+  }, [router])
 
   return (
-    <main className={`${font.className} min-h-screen bg-sky-100 flex justify-center items-center relative`}>
+    <main className={`${fontSans.className} min-h-screen bg-sky-100 flex justify-center items-center relative`}>
       {/* Background - lowest layer */}
       <div 
         className="absolute inset-0 bg-cover bg-center z-0"

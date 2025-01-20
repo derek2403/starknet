@@ -488,44 +488,21 @@ export default function Game() {
             // Monster defeated
             setShowMonster(false);
             setShowVictory(true);
-            
-            // Show notification after victory
-            const notificationTimer = setTimeout(() => {
+            setTimeout(() => {
                 setShowNoItemDrop(true);
-                
-                // Start the 10-second wait timer only after notification is shown
-                const closeTimer = setTimeout(() => {
+                // Allow closing after 10 seconds
+                setTimeout(() => {
                     setCanCloseNotification(true);
                 }, 10000);
-
-                // Cleanup timers if component unmounts
-                return () => {
-                    clearTimeout(closeTimer);
-                };
-            }, 3000);
-
-            // Cleanup victory timer if component unmounts
-            return () => {
-                clearTimeout(notificationTimer);
-            };
+            }, 3000); // Wait 3 seconds after victory
         }
     }, [monsterHealth]);
 
-    // Modify handleClose to be more explicit about the flow
-    const handleClose = (e) => {
-        // Prevent any default behaviors
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Only allow closing if the wait period is over
+    // Modify handleClose to check if notification can be closed
+    const handleClose = () => {
         if (canCloseNotification) {
             setShowNoItemDrop(false);
-            // Add a small delay before redirecting
-            setTimeout(() => {
-                router.push('/dungeonhall');
-            }, 100);
+            router.push('/dungeonhall');
         }
     };
 
@@ -731,13 +708,8 @@ export default function Game() {
 
             {/* Full Screen No Item Drop Notification */}
             {showNoItemDrop && (
-                <div 
-                    className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
-                >
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+                     onClick={(e) => e.stopPropagation()}>
                     <div className="absolute inset-0 bg-black bg-opacity-80" />
                     
                     <div className="relative z-50 w-screen h-screen flex flex-col items-center justify-center">
@@ -767,7 +739,7 @@ export default function Game() {
 
                         {!canCloseNotification && (
                             <div className="absolute top-6 right-16 text-white">
-                                Please wait 10 seconds...
+                                Please wait...
                             </div>
                         )}
 
@@ -775,7 +747,6 @@ export default function Game() {
                             src="/notif/noitemdrop.png"
                             alt="No Item Drop"
                             className="w-full h-full object-contain"
-                            onClick={(e) => e.stopPropagation()}
                         />
                     </div>
                 </div>

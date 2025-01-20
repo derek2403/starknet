@@ -1,10 +1,8 @@
 import Map from '../components/Map';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { GeistSans } from 'geist/font'
+import { fontSans } from '../lib/fonts';
 import Inventory from '../components/inventory'
-
-const font = GeistSans
 
 export default function MapTest() {
   const router = useRouter();
@@ -33,7 +31,7 @@ export default function MapTest() {
   }, [router]);
 
   return (
-    <main className={`${font.className} min-h-screen relative`}>
+    <main className={`${fontSans.className} min-h-screen relative`}>
       <div className="relative w-full h-screen">
         <Map />
       </div>

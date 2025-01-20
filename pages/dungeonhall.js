@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Character from '../components/Character.js';
-import { GeistSans } from 'geist/font'
+import { fontSans } from '../lib/fonts';
 import Inventory from '../components/inventory'
-
-const font = GeistSans
 
 export default function DungeonHall() {
   const router = useRouter();
@@ -36,7 +34,7 @@ export default function DungeonHall() {
   }, [showNotification, router]);
 
   return (
-    <main className={`${font.className} min-h-screen relative`}>
+    <main className={`${fontSans.className} min-h-screen relative`}>
       <div 
         style={{
           width: '100vw',
