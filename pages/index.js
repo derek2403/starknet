@@ -1,39 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../styles/landingpage.module.css';
-import { useRouter } from 'next/router';
+import GameLogin from '../components/GameLogin';
 
 export default function LandingPage() {
-  const router = useRouter();
+  const [showLogin, setShowLogin] = useState(false);
 
   const handleClick = () => {
-    router.push('/mapTest');  // Navigate to mapTest.js when clicked
+    setShowLogin(true);
   };
 
   return (
     <div 
       className={styles.container}
-      onClick={handleClick}  // Add click handler to the entire container
-      style={{ cursor: 'pointer' }}  // Add pointer cursor to indicate clickable
+      onClick={!showLogin ? handleClick : undefined}
+      style={{ cursor: !showLogin ? 'pointer' : 'default' }}
     >
-      <div className={styles.content}>
-        <div className={styles.gifContainer}>
-          <img 
-            src="/landingpage/landing.gif"
-            alt="Landing Animation"
-            className={styles.landingGif}
-          />
+      {!showLogin ? (
+        <div className={styles.content}>
+          <div className={styles.gifContainer}>
+            <img 
+              src="/landingpage/landing.gif"
+              alt="Landing Animation"
+              className={styles.landingGif}
+            />
+          </div>
+          <div className={styles.sunnybackContainer}>
+            <img 
+              src="/landingpage/sunnyback.png"
+              alt="Sunny Background"
+              className={styles.sunnybackImage}
+            />
+          </div>
+          <div className={styles.startText}>
+            START
+          </div>
         </div>
-        <div className={styles.sunnybackContainer}>
-          <img 
-            src="/landingpage/sunnyback.png"
-            alt="Sunny Background"
-            className={styles.sunnybackImage}
-          />
+      ) : (
+        <div className={styles.loginOverlay}>
+          <GameLogin />
         </div>
-        <div className={styles.startText}>
-          START
-        </div>
-      </div>
+      )}
     </div>
   );
+}
+
+// Add this to prevent static path error
+export async function getStaticProps() {
+  return {
+    props: {}
+  };
 }

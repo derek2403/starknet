@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Boat from './Boat';
 import Character from './Character';
 import NPC from './NPC';
+import { useDojoContract } from '../hooks/useDojoContract';
 
 const Map = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { position } = useDojoContract();
 
   useEffect(() => {
     setIsLoaded(true);

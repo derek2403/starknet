@@ -1,0 +1,41 @@
+.gameLoginCard {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+    padding: 24px;
+    width: 320px;
+    text-align: center;
+    color: white;
+}
+
+.gameBanner {
+    margin-bottom: 24px;
+}
+
+.gameBanner img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.loginButton {
+    background: linear-gradient(to right, #4CAF50, #45a049);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 16px 0;
+}
+
+.footer {
+    margin-top: 24px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.footer a {
+    color: #4CAF50;
+    text-decoration: none;
+} 

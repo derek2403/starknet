@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useDojoContract } from '../hooks/useDojoContract';
+import { useAccount } from '@starknet-react/core';
 
 const Character = ({ scale = 1 }) => {
   const router = useRouter();
+  const { address } = useAccount();
+  const { position, spawn, move, isInitialized, isConnected, connectWallet } = useDojoContract();
   const [currentFrame, setCurrentFrame] = useState(0);
   const [facingLeft, setFacingLeft] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -48,88 +52,38 @@ const Character = ({ scale = 1 }) => {
     };
   }, [isMoving]);
 
-  // Movement and key handling
+  // Spawn character when component mounts
   useEffect(() => {
-    const keys = new Set();
-    let moveInterval;
+    if (address) {
+      spawn();
+    }
+  }, [address]);
+
+  // Update movement handling
+  useEffect(() => {
+    if (!address || !isInitialized) return;
 
     const handleKeyDown = (e) => {
-      // Check for number "1" key press
-      if (e.key === '1') {
-        router.push('/mapTest');
-        return;
-      }
-
       const validKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
       if (!validKeys.includes(e.key)) return;
 
-      if (!keys.has(e.key)) {
-        keys.add(e.key);
-        setIsMoving(true);
-        
-        if (e.key === 'ArrowLeft') setFacingLeft(true);
-        if (e.key === 'ArrowRight') setFacingLeft(false);
-        
-        if (!moveInterval) {
-          moveInterval = setInterval(() => {
-            updatePosition(keys);
-          }, 16);
-        }
-      }
+      setIsMoving(true);
+      if (e.key === 'ArrowLeft') setFacingLeft(true);
+      if (e.key === 'ArrowRight') setFacingLeft(false);
+
+      move(e.key, true); // true for keydown
     };
 
     const handleKeyUp = (e) => {
-      keys.delete(e.key);
-      if (keys.size === 0) {
+      const validKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+      if (!validKeys.includes(e.key)) return;
+
+      move(e.key, false); // false for keyup
+      
+      // Only stop moving animation if no keys are pressed
+      if (!validKeys.some(key => key !== e.key && isKeyPressed(key))) {
         setIsMoving(false);
-        clearInterval(moveInterval);
-        moveInterval = null;
       }
-    };
-
-    const updatePosition = (keys) => {
-      setOffset(prev => {
-        let deltaX = 0;
-        let deltaY = 0;
-
-        if (keys.has('ArrowLeft')) deltaX -= 1;
-        if (keys.has('ArrowRight')) deltaX += 1;
-        if (keys.has('ArrowUp')) deltaY -= 1;
-        if (keys.has('ArrowDown')) deltaY += 1;
-
-        // Normalize diagonal movement
-        if (deltaX !== 0 && deltaY !== 0) {
-          const normalizer = 1 / Math.sqrt(2);
-          deltaX *= normalizer;
-          deltaY *= normalizer;
-        }
-
-        const newOffsetX = prev.x + (deltaX * MOVEMENT_SPEED);
-        const newOffsetY = prev.y + (deltaY * MOVEMENT_SPEED);
-
-        // Calculate absolute position
-        const absoluteX = Math.round(initialPosition.x + newOffsetX);
-        const absoluteY = Math.round(initialPosition.y + newOffsetY);
-        
-        console.log(`Character Position - X: ${absoluteX}, Y: ${absoluteY}`);
-
-        // Check for community page transition
-        if (absoluteX >= 518 && absoluteX <= 528 && absoluteY >= 250 && absoluteY <= 260) {
-          router.push('/community');
-        }
-
-        // Check for mapTest page transition
-        if (absoluteX >= 250 && absoluteX <= 350 && absoluteY === 470) {
-          router.push('/mapTest');
-        }
-
-        // Check for dungeon page transition
-        if (absoluteX >= 795 && absoluteX <= 805 && absoluteY === 240) {
-          router.push('/dungeon');
-        }
-
-        return { x: newOffsetX, y: newOffsetY };
-      });
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -138,11 +92,13 @@ const Character = ({ scale = 1 }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      if (moveInterval) {
-        clearInterval(moveInterval);
-      }
     };
-  }, []);
+  }, [address, isInitialized, move]);
+
+  // Helper function to check if a key is currently pressed
+  const isKeyPressed = (key) => {
+    return document.querySelector(`[data-key="${key}"]`)?.getAttribute('aria-pressed') === 'true';
+  };
 
   const containerStyles = {
     position: 'relative',
@@ -159,17 +115,39 @@ const Character = ({ scale = 1 }) => {
     imageRendering: 'pixelated',
     backgroundPosition: `-${currentFrame * SPRITE_WIDTH}px 0px`,
     position: 'absolute',
-    left: `${initialPosition.x + offset.x}px`,
-    top: `${initialPosition.y + offset.y}px`,
+    left: `${position.x}px`,
+    top: `${position.y}px`,
     transform: `scaleX(${facingLeft ? -1 : 1}) scale(${BASE_SCALE_FACTOR * scale})`,
     transition: 'transform 0.1s ease-in-out',
     pointerEvents: 'none'
   });
 
+  // Add a connect wallet button if not connected
+  if (!isConnected) {
+    return (
+      <div className="fixed bottom-4 right-4">
+        <button 
+          onClick={connectWallet}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Connect Wallet
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyles}>
-      <div style={spriteStyles(true)} /> {/* Base layer */}
-      <div style={spriteStyles(false)} /> {/* Hair layer */}
+      <div style={{
+        ...spriteStyles(true),
+        left: `${position.x}px`,
+        top: `${position.y}px`
+      }} />
+      <div style={{
+        ...spriteStyles(false),
+        left: `${position.x}px`,
+        top: `${position.y}px`
+      }} />
     </div>
   );
 };
