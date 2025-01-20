@@ -47,10 +47,14 @@
   font-size: 1.875rem;
   color: #000000;
   transition: color 0.3s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.5rem;
 }
 
 .closeButton:hover {
-  color: #000000;
+  color: #666;
 }
 
 .chatBox {
@@ -64,9 +68,25 @@
 }
 
 .message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   border-radius: 0.25rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .playerMessage {
@@ -83,12 +103,21 @@
   font-weight: bold;
   font-family: 'Teko', sans-serif;
   font-size: 1.2rem;
+  margin-right: 8px;
 }
 
 .messageText {
   font-family: 'Teko', sans-serif;
   font-size: 1.2rem;
   line-height: 1.5;
+  word-break: break-word;
+}
+
+.timestamp {
+  font-size: 0.7em;
+  color: #666;
+  margin-left: 8px;
+  font-style: italic;
 }
 
 .form {
@@ -99,7 +128,7 @@
 .input {
   flex: 1;
   background-color: rgba(0, 0, 0, 0.6);
-  color: #000000;
+  color: #ffffff;
   border: 2px solid #000000;
   border-radius: 0.5rem;
   padding: 0.5rem;
@@ -109,22 +138,37 @@
 
 .input:focus {
   outline: none;
-  border-color: #000000;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .sendButton {
-  background-color: white;
-  color: black;
-  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1.5rem;
   border-radius: 0.5rem;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   font-family: 'Teko', sans-serif;
   font-size: 1.2rem;
-  border: 2px solid #333;
+  border: none;
+  cursor: pointer;
 }
 
-.sendButton:hover {
-  background-color: #f0f0f0;
+.sendButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #94a3b8;
 }
 
 .pageWrapper {
@@ -140,40 +184,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 50;
 }
 
 .connectPrompt {
   text-align: center;
   padding: 20px;
   color: #666;
-}
-
-.timestamp {
-  font-size: 0.7em;
-  color: #666;
-  margin-left: 8px;
-}
-
-.sender {
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.message {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.sendButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.input:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
 }
 
 .error {
@@ -183,6 +200,94 @@
   background-color: rgba(220, 38, 38, 0.1);
   border-radius: 4px;
   font-size: 0.9em;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Scrollbar Styling */
+.chatBox::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatBox::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.chatBox::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.chatBox::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Loading State */
+.sendButton.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.sendButton.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+    height: 90vh;
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .input {
+    font-size: 1rem;
+  }
+
+  .sendButton {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 95%;
+    height: 95vh;
+  }
+
+  .form {
+    flex-direction: column;
+  }
+
+  .sendButton {
+    width: 100%;
+  }
 }
 
 .connectButton {

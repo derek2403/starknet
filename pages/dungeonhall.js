@@ -5,6 +5,22 @@ import Character from '../components/Character.js';
 export default function DungeonGame() {
   const router = useRouter();
   const [showNotification, setShowNotification] = useState(false);
+  const [showGamePrompt, setShowGamePrompt] = useState(false);
+
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === '2') {
+        setShowGamePrompt(true);
+        setTimeout(() => {
+          router.push('/gamega');
+        }, 1000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [router]);
 
   // Portal check effect
   useEffect(() => {
@@ -87,6 +103,7 @@ export default function DungeonGame() {
         />
       </div>
 
+
       {/* Notification Layer */}
       {showNotification && (
         <div
@@ -105,6 +122,19 @@ export default function DungeonGame() {
           Directing you to outside world...
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+          }
+        }
+      `}</style>
     </div>
   );
 }
