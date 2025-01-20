@@ -1,6 +1,10 @@
 import Map from '../components/Map';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { GeistSans } from 'geist/font'
+import Inventory from '../components/inventory'
+
+const font = GeistSans
 
 export default function MapTest() {
   const router = useRouter();
@@ -29,9 +33,12 @@ export default function MapTest() {
   }, [router]);
 
   return (
-    <div className="relative w-full h-screen">
-      <Map />
-    </div>
+    <main className={`${font.className} min-h-screen relative`}>
+      <div className="relative w-full h-screen">
+        <Map />
+      </div>
+      <Inventory />
+    </main>
   );
 }
 
