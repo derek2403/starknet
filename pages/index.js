@@ -1,8 +1,11 @@
 import Image from "next/image";
 import { Inter } from 'next/font/google'
+import { GeistSans } from 'geist/font'
+import Inventory from '../components/inventory'
 
 // Configure the font
 const inter = Inter({ subsets: ['latin'] })
+const font = GeistSans
 
 export default function Home() {
   return (
@@ -102,6 +105,7 @@ export default function Home() {
           Go to nextjs.org →
         </a>
       </footer>
+      <Inventory />
     </div>
   );
 }

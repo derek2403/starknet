@@ -1,5 +1,6 @@
 import { GeistSans } from 'geist/font'
 import { useState, useEffect } from 'react'
+import Inventory from '../components/inventory'
 
 const font = GeistSans
 
@@ -36,6 +37,7 @@ export default function Marketplace() {
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-full h-auto z-10"
         />
       )}
+      <Inventory />
     </main>
   )
 }
