@@ -31,11 +31,6 @@ export default function MapTest() {
   return (
     <div className="relative w-full h-screen">
       <Map />
-      {/* Optional: Add visual indicators for the shortcuts */}
-      <div className="fixed bottom-4 left-4 text-white text-lg space-y-2 bg-black bg-opacity-50 p-4 rounded">
-        <p>Press 1: Go to Community</p>
-        <p>Press 2: Go to Dungeon Hall</p>
-      </div>
     </div>
   );
 }
