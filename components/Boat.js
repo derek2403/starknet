@@ -38,7 +38,7 @@ const Boat = () => {
       style={{ 
         position: 'absolute',
         left: `${position + 300}px`, // Add 300px offset to the dynamic position
-        top: '155px',
+        top: '125px',
         transform: `scaleX(${direction})`,
         width: '100px',
         height: '100px',

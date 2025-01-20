@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
 import NPC from '../pages/components/NPC.js';
+import Image from 'next/image';
 
 // Only the first 5 movements for the game board
 const actions = ['e4e5', 'c4c5', 'd4e4', 'b3a3', 'a1a1'];
@@ -21,6 +22,7 @@ export default function Game() {
     const [showVictory, setShowVictory] = useState(false);
     const [showEmpty, setShowEmpty] = useState(false);
     const [npcAction, setNpcAction] = useState('idle');
+    const [showNoItemPopup, setShowNoItemPopup] = useState(false);
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -454,17 +456,30 @@ export default function Game() {
         }, 2000);
     };
 
-    // Handle click after monster is dead
-    const handleClick = () => {
-        if (!showMonster) {
-            router.push('/dungeonhall');
+    // Update the monster death sequence
+    useEffect(() => {
+        if (isMonsterDead) {
+            // Wait for death animation to complete
+            setTimeout(() => {
+                setShowNoItemPopup(true);
+            }, 2000); // Wait for diemonster.gif to finish
+        }
+    }, [isMonsterDead]);
+
+    // Handle popup click
+    const handlePopupClick = () => {
+        if (showNoItemPopup) {
+            // Add a delay before redirecting
+            setTimeout(() => {
+                router.push('/dungeonhall');
+            }, 1000); // Wait 1 second after click before redirecting
         }
     };
 
     return (
         <div 
             className={styles['game-container-wrapper']}
-            onClick={handleClick}  // Add click handler to whole container
+            onClick={handlePopupClick}
         >
             <div className={styles['content-wrapper']}>
                 <div className={styles['game-title']}>
@@ -568,6 +583,38 @@ export default function Game() {
                 </div>
 
                 <div id="game-container" className={styles['game-container']} />
+
+                {/* No item popup overlay */}
+                {showNoItemPopup && (
+                    <div 
+                        className={styles['popup-overlay']}
+                        onClick={handlePopupClick}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100vw',
+                            height: '100vh',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1000,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <img 
+                            src="/gameJew/noitemdrop.png"  // Make sure this path matches your image location
+                            alt="No Item Drop"
+                            style={{
+                                maxWidth: '500px',
+                                width: '100%',
+                                height: 'auto',
+                                objectFit: 'contain'
+                            }}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
