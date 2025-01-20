@@ -1,7 +1,9 @@
 import { useAccount, useConnect } from '@starknet-react/core';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 export default function GameLogin() {
+    const router = useRouter();
     const { connect, connectors, status } = useConnect();
     const { address } = useAccount();
     const [username, setUsername] = useState();
@@ -13,7 +15,8 @@ export default function GameLogin() {
     useEffect(() => {
         if (!address) return;
         controller?.username?.().then((name) => setUsername(name));
-    }, [address, controller]);
+        router.push('/mapTest');
+    }, [address, controller, router]);
 
     const handleConnect = async () => {
         if (!controller || status === 'connecting') return;
@@ -38,7 +41,7 @@ export default function GameLogin() {
     };
 
     return (
-        <div className="bg-black/80 rounded-xl p-6 w-80 text-center text-white">
+        <div className="rounded-xl p-6 w-80 text-center text-white">
             <div className="mb-6">
                 <h2 className="text-xl font-bold">My Game</h2>
                 <p className="text-gray-300">Connect your Cartridge account</p>
@@ -47,6 +50,7 @@ export default function GameLogin() {
             {address ? (
                 <div className="mb-4">
                     <p>Welcome {username || address}</p>
+                    <p className="text-sm text-gray-400">Redirecting to game...</p>
                 </div>
             ) : (
                 <>

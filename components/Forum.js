@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from '../styles/Forum.module.css';
+import { useForumContract } from '../hooks/useForumContract';
 
 const Forum = ({ onClose }) => {
-  const [messages, setMessages] = useState([]);
+  const { messages, sendMessage, isReady } = useForumContract();
   const [newMessage, setNewMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState('');
   const chatBoxRef = useRef(null);
 
   // Auto-scroll to bottom when new messages are added
@@ -13,15 +16,32 @@ const Forum = ({ onClose }) => {
     }
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      setMessages([...messages, {
-        id: Date.now(),
-        text: newMessage,
-        sender: 'Player'
-      }]);
-      setNewMessage('');
+    setError(''); // Clear any previous errors
+
+    if (!isReady) {
+      setError('Waiting for Dojo to initialize...');
+      return;
+    }
+
+    if (newMessage.trim() && !isSending) {
+      setIsSending(true);
+      try {
+        console.log('Sending message:', newMessage);
+        const success = await sendMessage(newMessage);
+        console.log('Message sent:', success);
+        if (success) {
+          setNewMessage('');
+        } else {
+          setError('Failed to send message');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        setError('Error sending message: ' + error.message);
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -38,13 +58,17 @@ const Forum = ({ onClose }) => {
             <div 
               key={msg.id}
               className={`${styles.message} ${
-                msg.sender === 'Player' ? styles.playerMessage : styles.otherMessage
+                msg.sender === 'You' ? styles.playerMessage : styles.otherMessage
               }`}
             >
-              <span className={styles.sender}>{msg.sender}: </span>
+              <span className={styles.sender}>{msg.sender}</span>
               <span className={styles.messageText}>{msg.text}</span>
+              <span className={styles.timestamp}>
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </span>
             </div>
           ))}
+          {error && <div className={styles.error}>{error}</div>}
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -54,9 +78,14 @@ const Forum = ({ onClose }) => {
             onChange={(e) => setNewMessage(e.target.value)}
             className={styles.input}
             placeholder="Type your message..."
+            disabled={isSending || !isReady}
           />
-          <button type="submit" className={styles.sendButton}>
-            Send
+          <button 
+            type="submit" 
+            className={styles.sendButton}
+            disabled={isSending || !isReady}
+          >
+            {isSending ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>

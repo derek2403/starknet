@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 const Boat = () => {
   const [position, setPosition] = useState(0); // Start at 300px from left
@@ -46,12 +45,15 @@ const Boat = () => {
         zIndex: 10,
       }}
     >
-      <Image
-        src="/background/isle_boat.gif"
+      <img
+        src="/background/boat.gif"
         alt="Moving boat"
-        width={100}
-        height={100}
-        style={{ objectFit: 'contain' }}
+        style={{ 
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          imageRendering: 'pixelated'
+        }}
       />
     </div>
   );

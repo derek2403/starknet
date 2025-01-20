@@ -1,11 +1,16 @@
 import Map from '../components/Map';
 
-const MapTest = () => {
+export default function MapTest() {
   return (
-    <div>
+    <div className="relative w-full h-screen">
       <Map />
     </div>
   );
-};
+}
 
-export default MapTest;
+// Add this to prevent static path error
+export async function getStaticProps() {
+  return {
+    props: {}
+  };
+}
