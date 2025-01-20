@@ -1,12 +1,16 @@
+const { createServer } = require('https');
+const { parse } = require('url');
+const next = require('next');
+const fs = require('fs');
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
   webpack: (config) => {
-    config.module.rules.push({
-      test: /\.tmj$/,
-      type: 'asset/resource'
-    });
+    config.resolve.fallback = { fs: false, net: false, tls: false };
     return config;
   }
-}
+};
 
-module.exports = nextConfig 
+module.exports = nextConfig; 
