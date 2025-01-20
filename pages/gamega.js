@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from '../styles/gamega.module.css';
 import { useRouter } from 'next/router';
 import NPC from '../pages/components/NPC.js';
@@ -21,6 +21,12 @@ export default function Game() {
     const [showVictory, setShowVictory] = useState(false);
     const [showEmpty, setShowEmpty] = useState(false);
     const [npcAction, setNpcAction] = useState('idle');
+    const [showNoItemDrop, setShowNoItemDrop] = useState(false);
+    const [showContinueButton, setShowContinueButton] = useState(false);
+    const [isAIPlaying, setIsAIPlaying] = useState(false);
+    const [aiInterval, setAiInterval] = useState(null);
+    const [gameInitialized, setGameInitialized] = useState(false);
+    const [isProcessingMove, setIsProcessingMove] = useState(false);
 
     const handleFrameClick = () => {
         if (currentImage < 4) {
@@ -106,6 +112,10 @@ export default function Game() {
                             frameRate: 12,
                             repeat: 0
                         });
+
+                        // Signal that the game is ready
+                        setGameInitialized(true);
+                        window.gameScene = this;
                     }
 
                     selectOrb(orb) {
@@ -391,6 +401,16 @@ export default function Game() {
                             }
                         });
                     }
+
+                    // Add a helper method for AI moves
+                    makeAIMove(orb1, orb2) {
+                        if (!this.isProcessing && orb1 && orb2) {
+                            this.selectOrb(orb1);
+                            setTimeout(() => {
+                                this.selectOrb(orb2);
+                            }, 200);
+                        }
+                    }
                 }
 
                 const config = {
@@ -456,15 +476,124 @@ export default function Game() {
 
     // Handle click after monster is dead
     const handleClick = () => {
-        if (!showMonster) {
-            router.push('/dungeonhall');
+        if (!showMonster && !showNoItemDrop) {
+            // Only allow clicks when not showing notification
+            // Add any other click handling here
         }
     };
 
+    useEffect(() => {
+        if (monsterHealth <= 0) {
+            // Monster defeated
+            setShowMonster(false);
+            setShowVictory(true);
+            setTimeout(() => {
+                setShowNoItemDrop(true);
+            }, 3000); // Wait 3 seconds after victory
+        }
+    }, [monsterHealth]);
+
+    // Only close and redirect when player clicks the close button
+    const handleClose = () => {
+        setShowNoItemDrop(false);
+        router.push('/dungeonhall');
+    };
+
+    // Modify findBestMove to strictly check isAIPlaying
+    const findBestMove = (scene) => {
+        if (!isAIPlaying || !scene || !scene.grid || isProcessingMove) {
+            return null;
+        }
+        // Look for potential matches
+        for (let row = 0; row < 6; row++) {
+            for (let col = 0; col < 5; col++) {
+                const orb1 = scene.grid[row][col];
+                const orb2 = scene.grid[row][col + 1];
+
+                if (!orb1 || !orb2 || !orb1.active || !orb2.active) {
+                    continue;
+                }
+
+                // Check if these orbs would make a match when swapped
+                const type1 = orb1.getData('type');
+                const type2 = orb2.getData('type');
+
+                // Check horizontal match potential
+                if (col < 4 && scene.grid[row][col + 2]) {
+                    const type3 = scene.grid[row][col + 2].getData('type');
+                    if (type2 === type3) {
+                        return { orb1, orb2 };
+                    }
+                }
+
+                // Check vertical match potential
+                if (row < 4 && scene.grid[row + 1][col] && scene.grid[row + 2][col]) {
+                    const below1 = scene.grid[row + 1][col].getData('type');
+                    const below2 = scene.grid[row + 2][col].getData('type');
+                    if (type1 === below1 && type1 === below2) {
+                        return { orb1, orb2 };
+                    }
+                }
+            }
+        }
+        return null;
+    };
+
+    // Update toggleAIPlay to be more strict
+    const toggleAIPlay = useCallback(() => {
+        // Clear any existing interval first
+        if (aiInterval) {
+            clearInterval(aiInterval);
+            setAiInterval(null);
+        }
+
+        setIsAIPlaying(prev => {
+            if (!prev) {
+                console.log("Starting AI...");
+                const interval = setInterval(() => {
+                    const scene = window.gameScene;
+                    if (scene && !isProcessingMove && swapCount > 0) {
+                        console.log("Finding move...");
+                        setIsProcessingMove(true);
+                        const move = findBestMove(scene);
+                        if (move) {
+                            console.log("Found move at row " + move.row + ", col " + move.col);
+                            console.log("Executing move...");
+                            scene.selectOrb(scene.grid[move.row][move.col]);
+                            setIsProcessingMove(false);
+                        }
+                    }
+                }, 2000);
+                setAiInterval(interval);
+                return true;
+            }
+            console.log("Stopping AI...");
+            return false;
+        });
+    }, [aiInterval, isProcessingMove, swapCount]);
+
+    // Add cleanup effect that runs on mount/unmount only
+    useEffect(() => {
+        // Ensure AI is off initially
+        setIsAIPlaying(false);
+        setIsProcessingMove(false);
+        
+        // Cleanup function
+        return () => {
+            if (aiInterval) {
+                clearInterval(aiInterval);
+                setAiInterval(null);
+            }
+            setIsAIPlaying(false);
+            setIsProcessingMove(false);
+        };
+    }, []); // Empty dependency array means this only runs on mount/unmount
+
+    // Add the Auto button with better visibility
     return (
         <div 
             className={styles['game-container-wrapper']}
-            onClick={handleClick}  // Add click handler to whole container
+            onClick={handleClick}
         >
             <div className={styles['content-wrapper']}>
                 <div className={styles['game-title']}>
@@ -569,6 +698,74 @@ export default function Game() {
 
                 <div id="game-container" className={styles['game-container']} />
             </div>
+
+            {/* Full Screen No Item Drop Notification */}
+            {showNoItemDrop && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+                     onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling up
+                >
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-black bg-opacity-80" />
+                    
+                    {/* Notification Content */}
+                    <div className="relative z-50 w-screen h-screen flex flex-col items-center justify-center">
+                        {/* Close Button */}
+                        <button
+                            onClick={handleClose}
+                            className="absolute top-4 right-4 w-10 h-10 bg-gray-800 hover:bg-gray-700 
+                                     rounded-full flex items-center justify-center z-50 
+                                     transition-colors transform hover:scale-110 active:scale-95"
+                        >
+                            <svg 
+                                className="w-6 h-6 text-white" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M6 18L18 6M6 6l12 12" 
+                                />
+                            </svg>
+                        </button>
+
+                        <img 
+                            src="/notif/noitemdrop.png"
+                            alt="No Item Drop"
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Add this button */}
+            <button 
+                className={`${styles['ai-button']} ${isAIPlaying ? styles['active'] : ''}`} 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Auto button clicked");
+                    toggleAIPlay();
+                }}
+                style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '20px',
+                    zIndex: 1000,
+                    padding: '10px 20px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    backgroundColor: isAIPlaying ? '#48bb78' : '#4a5568',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+            >
+                {isAIPlaying ? 'Stop Auto' : 'Start Auto'}
+            </button>
         </div>
     );
 }
